@@ -10,29 +10,19 @@ This repository acts as a backend to the chrome extension AI Impact Tracker:
  - The calculations folder contains the necessary code and input data to complete water, carbon, and energy calculations. This folder also hosts the FastAPI code that oversees the messaging between the chrome extension and the server.
  - The server_file folder contains the code to display information and analysis of data and for the website.
 
-First time setting up the fastapi:
+First time setting up the fastapi: <br>
+//create a new screen<br>
+screen -S ai-impact-screen<br>
+//activate the environment with the necessary dependencies (uvicorn + python code libraries)<br>
+source aiimpactvenv/bin/activate<br>
+// activate/reload uvicorn<br>
+uvicorn test:api --reload --port 8001 //set this to the port you are set up to listen on<br>
 
-//create a new screen
-
-screen -S ai-impact-screen
-
-//activate the environment with the necessary dependencies (uvicorn + python code libraries)
-
-source aiimpactvenv/bin/activate 
-
-// activate/reload uvicorn 
-
-uvicorn test:api --reload --port 8001 //set this to the port you are set up to listen on
-
-How to reload the new fastapi: 
-
-//reload your screen
-
-screen -r ai-impact-screen
-
-// activate/reload uvicorn 
-
-uvicorn test:api --reload --port 8001 //set this to the port you are set up to listen on
+How to reload the new fastapi:<br>
+//reload your screen<br>
+screen -r ai-impact-screen<br>
+// activate/reload uvicorn<br>
+uvicorn test:api --reload --port 8001 //set this to the port you are set up to listen on<br>
 
 
 
