@@ -11,17 +11,27 @@ This repository acts as a backend to the chrome extension AI Impact Tracker:
  - The server_file folder contains the code to display information and analysis of data and for the website.
 
 First time setting up the fastapi:
+
 //create a new screen
+
 screen -S ai-impact-screen
+
 //activate the environment with the necessary dependencies (uvicorn + python code libraries)
+
 source aiimpactvenv/bin/activate 
+
 // activate/reload uvicorn 
+
 uvicorn test:api --reload --port 8001 //set this to the port you are set up to listen on
 
 How to reload the new fastapi: 
+
 //reload your screen
+
 screen -r ai-impact-screen
+
 // activate/reload uvicorn 
+
 uvicorn test:api --reload --port 8001 //set this to the port you are set up to listen on
 
 
