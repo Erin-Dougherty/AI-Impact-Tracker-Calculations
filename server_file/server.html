@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Impact Tracker Dashboard</title>
+    <style>
+        * {
+           box-sizing: border-box;
+        }
+        h1 {
+	   font-size: 36px;
+           font-weight: 600;
+           margin-bottom: 10px;
+           color: #1a1a1a;
+    	}
+	p {
+           font-size: 16px; 
+           line-height: 1.5;
+           color: #555;
+	}
+        table {
+           width: 93%;
+           background-color: white;
+           border-radius: 10px;
+	   border-collapse: collapse;
+	   margin-left: auto;
+	   margin-right: auto;
+	}
+    	th, td {
+	  border: 1px solid #ddd;
+          padding: 12px;
+          text-align: center;
+    	}
+	th {
+	   background-color: #f5f7fa;
+	   font-weight: 600;
+	}
+	header {
+		background-color: rgb(232, 242, 255) /*#f1f1f1*/;
+  		text-align: center;
+  		padding: 10px;
+		height:150px;
+		display: flex;
+    		flex-direction: column;
+   		justify-content: center;
+    		align-items: center;
+		width: 100%;
+	}
+	#header-box {
+            height:175px;
+            text-align:center;
+            border:solid;
+            border-color:rgb(247, 247, 247);
+        }
+        .header-button { background-color: rgb(28, 135, 201); border: none; color: white; padding: 10px 17px; text-align: center; text-decoration: none; display: inline-block; font-size: 15px; margin: 8px 2px; cursor: pointer; }
+	ul.nav-box {
+  		display: flex;
+  		list-style-type: none;
+  		margin: 0;
+		padding: 0;
+  		background-color: rgb(28,135,201);
+		justify-content: center;
+		border-radius: 5px;
+		width: 100%;
+	}
+
+	/* Style links in topnav */
+	ul.nav-box li a {
+  		display: block;
+  		color: #f1f1f1;
+  		padding: 14px 16px;
+  		text-decoration: none;
+	}
+
+	/* Change color on hover */
+	ul.nav-box li a:hover {
+  		background-color: #dddddd;
+  		color: black;
+	}
+        #description {
+            border:solid;
+            padding:10px 10px;
+	    border-radius: 15px;
+        }
+	/* Hide content by default */
+        .tab-pane {
+            /* display: none; */
+	    position: absolute;
+            visibility: hidden;
+            height: 0;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        /* Reveal active block */
+        .tab-pane.active {
+            /* display: block;*/
+	    position: static;
+            visibility: visible;
+            height: auto;
+            border: 2px solid rgb(28,135,201);
+            padding: 5px 5px;
+        }
+        /* Highlight current button */
+        .tab-btn.active {
+            background-color: rgb(28, 135, 201);
+            color: white;
+        }
+        .chart {
+            width: 95%;
+	    height: 500px;
+        }
+
+	 /* Hide content by default */
+        .map-tab {
+            display: none;
+        }
+
+        /* Reveal active block */
+        .map-tab.active {
+            display: block;
+        }
+
+        /* Highlight current button */
+        .map-type.active {
+            background-color: rgb(28, 135, 201);
+            color: white;
+        }
+        .dropdown {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        /* Style the dropdown button */
+        .dropbtn {
+            background-color: rgb(232, 231, 230);
+            color: black;
+            padding: 16px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Dropdown content */
+        .dropdown-content {
+             display: none; /* Keeps it hidden until clicked */
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+        .dropdown-content.show {
+            display: block;
+        }
+
+        /* Links inside dropdown content */
+        .dropdown-content button {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        /* Change color of dropdown links on hover */
+        .dropdown-content button:hover {
+            background-color: #f1f1f1;
+        }
+        
+        .dropbtn:hover {
+            background-color: #3e8e41;
+        }
+        /* SHOW ON HOVER: Opens when mouse enters the dropdown container */
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* hides the menu instantly on click, ignoring the hover state */
+        .dropdown-content.closed {
+            display: none !important;
+        }
+    </style>
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+	<header><h1 id="header">AI Impact Tracker Dashboard</h1></header>
+	<ul class="nav-box">
+		<li><a href="https://aiimpacttracker.cs.haverford.edu/">Home</a></li>
+        	<li><a href="https://aiimpacttracker.cs.haverford.edu/policy">Privacy Policy</a></li>
+        	<li><a href="https://aiimpacttracker.cs.haverford.edu/methods">Methodology</a></li>
+        	<li><a href="https://aiimpacttracker.cs.haverford.edu/extension">Chrome Extension</a></li>
+		<li><a href="https://aiimpacttracker.cs.haverford.edu/about-us">About Us</a></li>
+	</ul>
+	<p id="description">
+          AI Impact Tracker estimates the environmental footprint of ChatGPT responses by tracking the number of output tokens in a response. (Tokens are sort of like the word count.) Using the user&apos;s coarse location, based on the country, or state or province and watershed (if in the United States or Canada), the extension estimates carbon, water, and energy usage associated with that activity. The extension only collects the number of output tokens and coarse location data. It does not collect or store the contents of user prompts or responses. This website displays and analyzes the aggregated usage and environmental data to consider large-scale impacts of generative AI.
+        </p>
+	<!-- Tab Navigation Links -->
+        <div class="tab-menu">
+            <button class="tab-btn active" onclick="switchTab(event, 'overview')">Overview</button>
+            <button class="tab-btn" onclick="switchTab(event, 'carbon')">Carbon</button>
+            <button class="tab-btn" onclick="switchTab(event, 'water')">Water</button>
+            <button class="tab-btn" onclick="switchTab(event, 'map')">Maps</button>
+        </div>
+	<!-- Tab Content Blocks -->
+        <div id="overview" class="tab-pane active">
+	<h1> Total Users: <span id="totalUsers"></span></h1>
+	<table>
+	 <tr>
+	    <th></th>
+	    <th>Tokens</th>
+	    <th>KWh</th>
+	    <th>CO2e (g)</th>
+	    <th>Miles Driven</th>
+	    <th>Water Consumption (mL)</th>
+	    <th>Water Bottles (500 mL)</th>
+	 </tr>
+	 <tr>
+            <th>Total across all users</th>
+            <td id="totalTokens"></td>
+            <td id="totalKWH"></td>
+            <td id="totalCarbon"></td>
+            <td id="totalMilesDriven"></td>
+            <td id="totalWater"></td>
+            <td id="totalWaterBottles"></td>
+        </tr>
+	<tr>
+	   <th>Average Per User Usage Total</th>
+	   <td id="avgUserTokens"></td>
+	   <td id="avgKWH"></td>
+	   <td id="avgUserCarbon"></td>
+	   <td id="avgMilesDriven"></td>
+	   <td id="avgWater"></td>
+	   <td id="avgWaterBottles"></td>
+         </tr>
+	<tr>
+           <th>Predicted Haverford Annual Academic Usage</th>
+           <td id="totalSchoolTokens"></td>
+           <td id="totalSchoolKWH"></td>
+           <td id="totalSchoolCarbon"></td>
+           <td id="totalSchoolMiles"></td>
+           <td id="totalSchoolWater"></td>
+           <td id="totalSchoolWaterBottles"></td>
+         </tr>
+	</table>
+	<div id="tokensChart" class="chart"></div>
+	<div id="trafficChart" class="chart"></div>
+	</div>
+	<div id="carbon" class="tab-pane">
+		<div id="carbonChart" class="chart"></div>
+		<div id="carbonBellChart" class="chart"></div>
+	</div>
+	<div id="water" class="tab-pane">
+	<h2>Adjusted Water Impact (AWI) by Watershed</h2>
+	<table id="awi-table">
+	    <thead>
+	        <tr>
+                    <th>PFAF ID</th>
+                    <th>Short AWI</th>
+                    <th>Long AWI (0.1)</th>
+                    <th>Long AWI (0.01)</th>
+                    <th>Locations</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+	</table>
+	<div id="summary"></div>
+	<div id="waterBarChart" class="chart"></div>
+	<div id="waterBoxChart" class="chart"></div>
+	<div id="waterResponseBoxChart" class="chart"></div>
+	<div id="projectedAnnualWater" class="chart"></div>
+	</div>
+		
+	<div id="map" class="tab-pane">
+		<!-- FIRST DROPDOWN SECTION -->
+        	<div class="dropdown" onmouseleave="resetDropdown('worldDropdownMenu')">
+            		<button class="dropbtn" id="worldDropBtn" onclick="toggleDropdown('worldDropdownMenu')">Choose World Map</button>
+            		<div class="dropdown-content" id="worldDropdownMenu">
+                		<button class="map-type" onclick="switchMap(event, 'world-energy-map', 'world-maps')">Energy</button>
+                		<button class="map-type" onclick="switchMap(event, 'world-carbon-map', 'world-maps')">Carbon</button>
+                		<button class="map-type" onclick="switchMap(event, 'world-water-map', 'world-maps')">Water</button>
+            		</div>
+        	</div>
+        
+        	<!-- Tab Content Blocks Group 1 -->
+        	<div class="map-group" id="world-maps">
+            		<div id="world-energy-map" class="map-tab active">
+                		<div id="worldEnergyMap" class="chart"></div>
+            		</div>
+            		<div id="world-carbon-map" class="map-tab">
+                		<div id="worldCarbonMap" class="chart"></div>
+            		</div>
+            		<div id="world-water-map" class="map-tab">
+                		<div id="worldWaterMap" class="chart"></div>
+            		</div>
+        	</div>
+		<br>
+		<!-- SECOND DROPDOWN SECTION -->
+		<div class="dropdown" onmouseleave="resetDropdown('dropdownMenu')">
+			<button class="dropbtn" id="dropBtn" onclick="toggleDropdown('dropdownMenu')">Choose Regional Map</button>
+            		<div class="dropdown-content" id="dropdownMenu">
+                		<button class="map-type" onclick="switchMap(event, 'energy-map', 'regional-maps')">Energy</button>
+                		<button class="map-type" onclick="switchMap(event, 'carbon-map', 'regional-maps')">Carbon</button>
+                		<button class="map-type" onclick="switchMap(event, 'water-map', 'regional-maps')">Water</button>
+            		</div>
+        	</div>
+		        
+        	<!-- Tab Content Blocks Group 2 -->
+		<div class="map-group" id="regional-maps">
+	        	<div id="energy-map" class="map-tab active">
+        	    		<div id="energyMap" class="chart"></div>
+        		</div>
+        		<div id="carbon-map" class="map-tab">
+		    		<div id="carbonMap" class="chart"></div>
+	        	</div>
+        		<div id ="water-map" class="map-tab">
+            			<div id="waterMap" class="chart"></div>
+        		</div>
+		</div>
+	</div>
+	<script src="/dashboard.js"></script>
+
+	<script>
+            function switchTab(event, tabId) {
+            // Hide all text blocks
+            let panes = document.getElementsByClassName("tab-pane");
+            for (var i = 0; i < panes.length; i++) {
+                panes[i].classList.remove("active");
+            }
+
+            // Reset all button styles
+            let buttons = document.getElementsByClassName("tab-btn");
+            for (var j = 0; j < buttons.length; j++) {
+                buttons[j].classList.remove("active");
+            }
+
+            // Target specific elements
+            document.getElementById(tabId).classList.add("active");
+            event.currentTarget.classList.add("active");
+            }
+	    // Toggles the specific dropdown menu visibility passed by ID
+            function toggleDropdown(menuId) {
+                document.getElementById(menuId).classList.toggle("show");
+            }
+            function switchMap(event, mapId, groupId) {
+		// Get the parent group wrapper
+                let group = document.getElementById(groupId);
+		// Hide only the panes inside this specific group
+                let panes = group.getElementsByClassName("map-tab");
+                for (var i = 0; i < panes.length; i++) {
+                    panes[i].classList.remove("active");
+                }
+
+		// Reset button styles only within the clicked dropdown menu
+                let dropdownMenu = event.currentTarget.parentElement;
+                let buttons = dropdownMenu.getElementsByClassName("map-type");
+                for (var j = 0; j < buttons.length; j++) {
+                    buttons[j].classList.remove("active");
+                }
+		let activePane = document.getElementById(mapId);
+
+                // Target specific elements
+                document.getElementById(mapId).classList.add("active");
+                event.currentTarget.classList.add("active");
+		// Force only the current dropdown to close immediately
+                dropdownMenu.classList.add("closed");
+
+		//Tell Plotly to immediately refresh and redraw the newly visible chart
+        	setTimeout(() => {
+            	    let activeChart = activePane.querySelector('.chart');
+            	    if (activeChart && window.Plotly) {
+                	Plotly.Plots.resize(activeChart); // Re-computes width/height to fill container
+            	    }
+        	}, 50); // Small 50ms delay gives the CSS time to make the tab visible first
+
+            }
+        
+	    // Clears the closed state for the specified menu ID
+            function resetDropdown(menuId) {
+                let menu = document.getElementById(menuId);
+                menu.classList.remove("closed");
+                menu.classList.remove("show"); // Also hide click toggle state
+            }
+
+    </script>
+</body>
+</html>

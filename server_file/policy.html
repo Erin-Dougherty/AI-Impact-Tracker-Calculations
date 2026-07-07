@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Privacy Policy</title>
+  <style>
+    h1 {
+      font-size: 36px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #1a1a1a;
+    }
+    #header-box {
+      height:175px;
+      text-align:center;
+      border:solid;
+      border-color:rgb(247, 247, 247);
+    }
+    .header-button { background-color: rgb(28, 135, 201); border: none; color: white; padding: 10px 17px; text-align: center; text-decoration: none; display: inline-block; font-size: 15px; margin: 8px 2px; cursor: pointer; }
+    #description {
+      border:solid;
+      padding:10px 10px;
+    }
+    header {
+      background-color: rgb(232, 242, 255) /*#f1f1f1*/;
+      text-align: center;
+      padding: 10px;
+      height:150px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+    ul.nav-box {
+      display: flex;
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+      background-color: rgb(28,135,201);
+      justify-content: center;
+      border-radius: 5px;
+      width: 100%;
+    }
+
+    /* Style links in topnav */
+    ul.nav-box li a {
+      display: block;
+      color: #f1f1f1;
+      padding: 14px 16px;
+      text-decoration: none;
+    }
+
+    /* Change color on hover */
+    ul.nav-box li a:hover {
+      background-color: #dddddd;
+      color: black;
+    }
+
+  </style>
+</head>
+<body>
+    <header><h1 id="header">Privacy Policy</h1></header>
+        <ul class="nav-box">
+                <li><a href="https://aiimpacttracker.cs.haverford.edu/">Home</a></li>
+                <li><a href="https://aiimpacttracker.cs.haverford.edu/policy">Privacy Policy</a></li>
+                <li><a href="https://aiimpacttracker.cs.haverford.edu/methods">Methodology</a></li>
+                <li><a href="https://aiimpacttracker.cs.haverford.edu/extension">Chrome Extension</a></li>
+		<li><a href="https://aiimpacttracker.cs.haverford.edu/about-us">About Us</a></li>
+        </ul>
+
+    <p><b>Project Goals</b></p>
+    <p> The AI Impact Tracker chrome extension was created to quantify the environmental impact of ChatGPT usage in terms of carbon, water, and energy consumed. The goal of this project is to raise public awareness to these impacts, both at an individual level and at community-wide levels by sharing analysis of aggregated data on a public website and privately displaying individual estimates in the extension’s popup window for individual subjects. We will also use our research and the data we collect to determine if publicly reported environmental impact estimates align with our data and study general trends of ChatGPT usage in our userbase.</p>
+    <p><b>Collected Data</b></p>
+    <p>In pursuit of this goal we will collect the following information from our subjects for each ChatGPT generated response: 
+      <ul>
+        <li>Length of the generated response in tokens (e.g. words)</li>
+        <li>Date of collection by the extension</li>
+        <li>Coarse location of the user in terms of the country, state or province (if in the United States or Canada), and watershed (if in the United States or Canada)</li>
+        <li>A randomly assigned anonymous user id</li>
+      </ul>
+    </p>
+    <p>From this collected information, we will calculate the following for each generated response:
+      <ul>
+	<li>Energy consumed by ChatGPT (kWh)</li>
+	<li>Water consumed by ChatGPT (mL)</li>
+	<li>Equivalent number of 500mL water bottles filled</li>
+	<li>Carbon emitted by ChatGPT (CO2e g)</li>
+	<li>Equivalent carbon impact from driving a gas-powered car x miles</li>
+      </ul>
+    </p>
+    <p>The use of information received from Google APIs will adhere to the Chrome Web Store User Data Policy, including the Limited Use requirements.</p>
+    <p><b>Potential Risks</b></p>
+    <p>Collected data will be stored on a server and we will strive to maintain subject confidentiality by only sharing aggregated and averaged data publicly. There is a low risk for identification if a security breach were to occur as our collection of coarse location data alongside an anonymous user id could potentially be used to determine the identity of our subjects. However, the chance of this occurring is low and the level of potential harm from identification is also low as only the levels of usage in terms of number of tokens (e.g. words) used per day, and their coarse location could be determined. The content or text ChatGPT generates is not ever transmitted to the server, so the user prompts and topic of use cannot be determined.</p>
+</body>
+</html>

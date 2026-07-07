@@ -1,0 +1,98 @@
+\<!DOCTYPE html>
+<html>
+<head>
+    <title>GPT Footprint Dashboard</title>
+    <style>
+        body {
+            font-family: Arial;
+            margin: 40px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 600px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+        }
+    </style>
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+</body>
+	<table style ="width:100%>
+	 <tr>
+	    <th>Tokens</th>
+	    <th>KWh</th>
+	    <th>CO2e</th>
+	    <th>Miles Driven</th>
+	    <th>Water Usage </th>
+	    <th>Water bottles</th>
+	 </tr>
+	</table>
+	<div id="summary"></div>
+	<div id="tokensChart" style="width: 100%; height: 500px;"></div>
+	<div id="carbonChart" style="width: 100%; height: 500px;"></div>
+	<div id="waterChart" style="width: 100%; height: 500px;"></div>	
+	<script>
+    		async function loadDashboard() {
+      		const res = await fetch("/api/plot-data/?file_name=emissions.csv");
+      		const data = await res.json();
+
+      		if (!data.length) {
+        		document.getElementById("summary").textContent = "No data yet.";
+        	return;
+     		}
+
+      		const dates = data.map(row => row.date);
+      		const tokens = data.map(row => Number(row.tokens));
+
+      		document.getElementById("summary").textContent =
+       		`Total rows: ${data.length}`;
+
+      		Plotly.newPlot("tokensChart", [
+        	{ 
+          	  x: dates,
+          	  y: tokens,
+          	  type: "bar",
+          	  mode: "lines+markers",
+          	  name: "Tokens"
+        	}
+      		], {
+        	  title: "Total Tokens per Day",
+        	  xaxis: { title: "Date" },
+        	  yaxis: { title: "Tokens" }
+     		});
+
+     		Plotly.newPlot("carbonChart", [
+        	{
+          	  x: dates,
+          	  y: tokens,
+          	  type: "bar",
+          	  mode: "lines+markers",
+          	  name: "Carbon"
+        	 }
+      		], {
+        	  title: "Carbon Usage per Day",
+        	  xaxis: { title: "Date" },
+        	  yaxis: { title: "Carbon Usage" }
+     	 	});
+
+      		Plotly.newPlot("waterChart", [
+        	{
+          	  x: dates,
+          	  y: tokens,
+          	  type: "bar",
+          	  mode: "lines+markers",
+          	  name: "Water"
+        	 }
+      		], {
+        	  title: "Water Usage per Day",
+        	  xaxis: { title: "Date" },
+        	  yaxis: { title: "Water Usage" }
+      	});
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Impact Tracker Dashboard</title>
+    <style>
+        h1 {
+	   font-size: 36px;
+           font-weight: 600;
+           margin-bottom: 10px;
+           color: #1a1a1a;
+    	}
+	p {
+           font-size: 16px; 
+           line-height: 1.5;
+           color: #555;
+	}
+        table {
+           width: 100%;
+           background-color: white;
+           border-radius: 10px;
+	   border-collapse: collapse;
+	}
+    	th, td {
+	  border: 1px solid #ddd;
+          padding: 12px;
+          text-align: center;
+    	}
+	th {
+	   background-color: #f5f7fa;
+	   font-weight: 600;
+	}
+    </style>
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+	<h1>AI Impact Tracker Dashboard</h1>
+	<p>
+          AI Impact Tracker estimates the environmental footprint of ChatGPT responses by tracking the number of output tokens in a response. (Tokens are sort of like the word count.) Using the user&apos;s coarse location, based on the country, or state or province and watershed (if in the United States or Canada), the extension estimates carbon, water, and energy usage associated with that activity. The extension only collects the number of output tokens and coarse location data. It does not collect or store the contents of user prompts or responses. Usage data is sent to aiimpacttracker.cs.haverford.edu so users can view total carbon, water, and energy usage across all users.
+        </p>
+	<h1> Total Users: <span id="totalUsers"></span></h1>
+	<table>
+	 <tr>
+	    <th></th>
+	    <th>Tokens</th>
+	    <th>KWh</th>
+	    <th>CO2e (g)</th>
+	    <th>Miles Driven</th>
+	    <th>Water Consumption (mL)</th>
+	    <th>Water Bottles (500 mL)</th>
+	 </tr>
+	 <tr>
+            <th>Total across all users</th>
+            <td id="totalTokens"></td>
+            <td id="totalKWH"></td>
+            <td id="totalCarbon"></td>
+            <td id="totalMilesDriven"></td>
+            <td id="totalWater"></td>
+            <td id="totalWaterBottles"></td>
+        </tr>
+	<tr>
+	   <th>Average Per User Usage Total</th>
+	   <td id="avgUserTokens"></td>
+	   <td id="avgKWH"></td>
+	   <td id="avgUserCarbon"></td>
+	   <td id="avgMilesDriven"></td>
+	   <td id="avgWater"></td>
+	   <td id="avgWaterBottles"></td>
+         </tr>
+	<tr>
+           <th>Predicted Haverford Annual Academic Usage</th>
+           <td id="totalSchoolTokens"></td>
+           <td id="totalSchoolKWH"></td>
+           <td id="totalSchoolCarbon"></td>
+           <td id="totalSchoolMiles"></td>
+           <td id="totalSchoolWater"></td>
+           <td id="totalSchoolWaterBottles"></td>
+         </tr>
+	</table>
+	<h2>Adjusted Water Impact (AWI) by Watershed</h2>
+	<table id="awi-table">
+	    <thead>
+	        <tr>
+                    <th>PFAF ID</th>
+                    <th>Short AWI</th>
+                    <th>Long AWI (0.1)</th>
+                    <th>Long AWI (0.01)</th>
+                    <th>Locations</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+	</table>
+	<div id="summary"></div>
+	<div id="tokensChart" class="chart"></div>
+	<div id="carbonChart" class="chart"></div>
+	<div id="waterChart" class="chart"></div>
+	<div id="trafficChart" class="chart"></div>	
+	<div id="carbonBellChart" class="chart"></div>	
+	<div id="waterBarChart" class="chart"></div>
+	<div id="waterBoxChart" class="chart"></div>
+	<div id="waterResponseBoxChart" class="chart"></div>
+	<div id="projectedAnnualWater" class="chart"></div>
+	<script src="/dashboard.js"></script>
+</body>
+</html>

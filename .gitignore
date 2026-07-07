@@ -1,0 +1,16 @@
+log/
+calculations/data/
+calculations/energy_data/
+calculations/output_data/
+aiimpactvenv/
+.venv/
+venv/
+**/[vv][ee][nn][vv]/
+**/.venv/
+**/_venv/
+.venv/
+.vevn/
+venv/
+vevn/
+calculations/.venv/
+calculations/.vevn/

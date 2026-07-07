@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GPT Footprint Dashboard</title>
+    <style>
+        body {
+            font-family: Arial;
+            margin: 40px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 600px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+        }
+    </style>
+</head>

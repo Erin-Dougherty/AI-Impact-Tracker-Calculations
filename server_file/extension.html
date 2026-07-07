@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Extension Information</title>
+  <style>
+    .title-container {
+      display: flex;
+      align-items: center;    /* Keeps text and icon vertically centered relative to each other */
+      justify-content: center; /* Centers the whole unit in the middle of the screen */
+      gap: 15px;              /* Sets a clean pixel gap directly between text and icon */
+      margin-top: 10px;       /* Adjust spacing below the navigation buttons if needed */
+    }
+    img {
+      float: right;
+    }
+    #icon {
+      float:left;
+    }
+    #header-box {
+      height:175px;
+      text-align:center;
+      border:solid;
+      border-color:rgb(247, 247, 247);
+    }
+    .header-button { background-color: rgb(28, 135, 201); border: none; color: white; padding: 10px 17px; text-align: center; text-decoration: none; display: inline-block; font-size: 15px; margin: 8px 2px; cursor: pointer; }
+    #description {
+      border:solid;
+      padding:10px 10px;
+    }
+    header {
+      background-color: rgb(232, 242, 255) /*#f1f1f1*/;
+      text-align: center;
+      padding: 10px;
+      height:150px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+    ul.nav-box {
+      display: flex;
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+      background-color: rgb(28,135,201);
+      justify-content: center;
+      border-radius: 5px;
+      width: 100%;
+    }
+    /* Style links in topnav */
+    ul.nav-box li a {
+      display: block;
+      color: #f1f1f1;
+      padding: 14px 16px;
+      text-decoration: none;
+    }
+    /* Change color on hover */
+    ul.nav-box li a:hover {
+      background-color: #dddddd;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+  <div class="title-contatiner">
+    <header><h1 id="header">AI Impact Tracker Extension</h1></header>
+  </div>
+        <ul class="nav-box">
+                <li><a href="https://aiimpacttracker.cs.haverford.edu/">Home</a></li>
+                <li><a href="https://aiimpacttracker.cs.haverford.edu/policy">Privacy Policy</a></li>
+                <li><a href="https://aiimpacttracker.cs.haverford.edu/methods">Methodology</a></li>
+                <li><a href="https://aiimpacttracker.cs.haverford.edu/extension">Chrome Extension</a></li>
+		<li><a href="https://aiimpacttracker.cs.haverford.edu/about-us">About Us</a></li>
+        </ul>
+</div>
+<div id="overview">
+  <img id="icon" src="https://lh3.googleusercontent.com/scyyOG4OMtNo1YDFMEp5YgQSazQNOLsB-T_hOliqScCxMRT1dPkKcp1oOy8b44ji3LxcgJbFyd8zNWe7CYsw4BhZ=s120" alt="AI Impact Tracker Icon" width="150px">
+  <img src="https://lh3.googleusercontent.com/xGeZAO8IR_UaaU1CzdnAGUYVwaz8PYVZCV3WtNJzJKPc8xNZSXJ6ODJehXq9RK5YilFNs274uSEAHKCmBIdXsehr=s1280-w1280-h800" alt="extension screenshot" width="500px">
+  <h2>Overview</h2>
+  <p>Quantify the environmental impacts of ChatGPT usage including carbon, water, and energy consumption.</p>
+  <p>Estimate the environmental footprint of your ChatGPT usage in real time! Using the length of a generated response and your coarse location, AI Impact Tracker quantifies the carbon, water, and energy usage associated with your activity. 
+  </p>
+  <p>Click <a href="https://chromewebstore.google.com/detail/ai-impact-tracker/gopcpgaafebifedebipjgfnmmiogddaj?authuser=0&hl=en">here</a> to install!</p>
+  <p>Key Features:
+    <ul>
+      <li>Estimates environmental impacts by measuring output tokens (similar to word count) in generated responses.</li>
+      <li>Combines token data with your coarse location (by country, state or province, and watershed ID) to model localized grid and water resource impacts.</li>
+      <li>Collected data is securely analyzed at aiimpacttracker.cs.haverford.edu so you can view aggregated, community-wide environmental impacts.</li>
+    </ul>
+  </p>
+  <p>Privacy-First Design:
+    <ul>
+      <li>The extension never stores the actual content of your prompts or responses (just the length of the responses).</li>
+      <li>We strictly limit collection to the number of output tokens, your coarse location, and the date. Everything else remains completely private.</li>
+    </ul>
+  </p>
+</div>
+</body>
+</html>

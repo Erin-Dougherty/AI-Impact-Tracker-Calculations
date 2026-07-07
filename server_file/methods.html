@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Methodology</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" integrity="sha384-vlBdW0r3AcZO/HboRPznQNowvexd3fY8qHOWkBi5q7KGgqJ+F48+DceybYmrVbmB" crossorigin="anonymous">
+
+	  <!-- The loading of KaTeX is deferred to speed up page rendering -->
+  	<script defer src="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.js" integrity="sha384-AtrdNsnxl/75rvBneBVH7DtOvCxSVahR2zWqle1coBKd8DEmLoviqNeJSx64gNAs" crossorigin="anonymous"></script>
+
+  	<!-- To automatically render math in text elements, include the auto-render extension: -->
+  	<script defer src="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/contrib/auto-render.min.js" integrity="sha384-bjyGPfbij8/NDKJhSGZNP/khQVgtHUE5exjm4Ydllo42FwIgYsdLO2lXGmRBf5Mz" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+	<style>
+		h1 {
+           		font-size: 36px;
+           		font-weight: 600;
+           		margin-bottom: 10px;
+           		color: #1a1a1a;
+        	}
+		.ref {
+			margin-bottom: 15px;
+		}
+		#header-box {
+        		height:175px;
+        		text-align:center;
+        		border:solid;
+        		border-color:rgb(247, 247, 247);
+        	}
+        	.header-button { background-color: rgb(28, 135, 201); border: none; color: white; padding: 10px 17px; text-align: center; text-decoration: none; display: inline-block; font-size: 15px; margin: 8px 2px; cursor: pointer; }
+		header {
+	                background-color: rgb(232, 242, 255) /*#f1f1f1*/;
+        	        text-align: center;
+                	padding: 10px;
+                	height:150px;
+                	display: flex;
+                	flex-direction: column;
+                	justify-content: center;
+                	align-items: center;
+                	width: 100%;
+        	}
+	        ul.nav-box {
+        	        display: flex;
+                	list-style-type: none;
+                	margin: 0;
+                	padding: 0;
+                	background-color: rgb(28,135,201);
+                	justify-content: center;
+                	border-radius: 5px;
+                	width: 100%;
+        	}
+        	/* Style links in topnav */
+        	ul.nav-box li a {
+                	display: block;
+                	color: #f1f1f1;
+               	 	padding: 14px 16px;
+                	text-decoration: none;
+        	}
+        	/* Change color on hover */
+        	ul.nav-box li a:hover {
+                	background-color: #dddddd;
+                	color: black;
+        	}
+        	#description {
+        		border:solid;
+        		padding:10px 10px;
+        	}
+		.calculations {
+			padding: 1px 20px;
+		}
+	</style>
+</head>
+<body>
+	<header><h1 id="header">Methodology</h1></header>
+        <ul class="nav-box">
+                <li><a href="https://aiimpacttracker.cs.haverford.edu/">Home</a></li>
+                <li><a href="https://aiimpacttracker.cs.haverford.edu/policy">Privacy Policy</a></li>
+                <li><a href="https://aiimpacttracker.cs.haverford.edu/methods">Methodology</a></li>
+                <li><a href="https://aiimpacttracker.cs.haverford.edu/extension">Chrome Extension</a></li>
+		<li><a href="https://aiimpacttracker.cs.haverford.edu/about-us">About Us</a></li>
+        </ul>
+	<h2>Chrome Extension</h2>
+	<div class="calculations"><a href="https://github.com/pdelcol31/AI-Impact-Tracker">AI Impact Tracker Chrome extension GitHub respository</a></div>
+	<h2>Energy Calculations</h2>
+		<div class="calculations">
+		<p>To calculate the energy consumed by a ChatGPT request, we follow the methodology proposed by Rincè et al. 2025 (and utilized in the Ecologits Calculator, a tool that estimates the environmental footprint of generative AI models at inference). We define <em>E<sub>request</em></sub> as the energy consumed to generate a response in kWh:
+			\[E_{request}=E_{server}\cdot {PUE} / 1000\]
+			where <em>E<sub>server</sub></em> is the energy consumed by the server and <em>PUE</em> is the power usage effectiveness of a data center (or in other words, <em>PUE</em> measures the efficiency of a data center by comparing the total amount of power entering the facility to the portion used directly by information technology (IT) equipment). To determine <em>PUE</em>, we use self-reported values by Microsoft for their data centers, as OpenAI reportedly leases Microsoft data centers for ChatGPT models (Microsoft 2025). Unfortunately, the locations they have values for are limited so we are forced to use high-level values for the Americas, Asia Pacific, Europe & Middle East & Africa, or Global. This is an area of uncertainty due to high-level values and use of assumptions as the specific, local-level data we desired was not available.</p>
+		<p><em>E<sub>server</sub></em> is then defined as: \[E_{server} = E_{server\backslash GPU}+{GPU}\cdot E_{GPU}\]
+			where <em>E<sub>server\GPU</sub></em> considers server energy consumption without GPUs, <em>E<sub>GPU</sub></em> is the amount of energy consumed by a single GPU throughout a request period based on the number of output tokens and the model architecture, and <em>GPU</em> represents the total number of GPUs needed for a given search.</p> 
+		<p><em>E<sub>server\GPU</sub></em> in Wh is then defined as
+			\[E_{server\backslash GPU}(\delta T) = \delta T \cdot W_{server\backslash GPU}\cdot \frac{GPU}{\#GPU_{installed}}\cdot \frac{1}{B}\cdot \frac{1000}{3600}\]
+			where <em>&delta;T</em> is the generation latency (the time it takes the model to respond to an inference), <em>W<sub>server\GPU</sub></em> is a fixed power consumption of 1.2kW, <em>#GPU<sub>installed</sub></em> is assumed to be 8, and <em>B</em> represents a batch size of 64. </p>
+		<p>The latency is then defined as
+			\[\delta T(\#T_{out},P_{active},\delta T_{request}) = min\{\#T_{out}\cdot f_{L}(P_{active},B), \delta T_{request}\}\] \[f_{L}(P_{active},B) = \alpha P_{active} + \beta B + \lambda\] \[\delta T_{request}=\#T_{out}\cdot T_{per-sec}\]
+			where <em>#T<sub>out</sub></em> is the  number of output tokens generated by a request, <em>P<sub>active</sub></em> is the number of active parameters in billions (we assume a value of 300B following Rincè et al. 2025), <em>&alpha; = 6.78 &times; 10<sup>-4</sup></em>, <em>&beta; = 3.12 &times; 10<sup>-4</sup></em>, <em>&lambda; = 1.94 &times; 10<sup>-2</sup></em> (Rincè et al. 2025), and <em>T<sub>per-sec</sub></em> is the assumed number of tokens generated per second for GPT 5.5 of 66, following Artificial Analysis 2026.</p>
+		<p><em>GPU</em>, the number of GPUs needed for a single search, is then determined by:
+			\[GPU(P_{total},Q,M_{GPU}) = \left\lceil log_{2}(\left\lceil \frac{M_{model}}{M_{GPU}} \right\rceil ) \right\rceil\] \[M_{model}=1.2 \cdot \frac{P_{total}\cdot Q}{8}\]
+			where <em>P<sub>total</sub></em> is the total number of parameters in the model which we assume to be 900B (Rincè et al. 2025), <em>Q</em> quantized to 16 bits, <em>M<sub>GPU</sub></em> is the  memory available on one GPU (assumed to be 80GB), and <em>M<sub>model</sub></em> represents the required memory to host the LLM for inference.</p>
+		<p>Lastly, <em>E<sub>GPU</sub></em>, the amount of energy consumed by a single GPU for a request, is defined as
+			\[E_{GPU}(\# T_{out},P_{active}) =\# T_{out} \cdot \alpha e^{\beta B}\cdot P_{active} + \lambda\] 
+			where <em>&alpha; = 1.17 &times; 10<sup>-6</sup></em>, <em>&beta; = -1.12 &times; 10<sup>-2</sup></em>, and <em>&lambda; = 4.05 &times; 10<sup>-5</sup></em>.</p>
+		</div>
+	<h2>Water Calculations</h2>
+	<div class="calculations">
+	<p>To calculate water consumption for each generated response we follow methods from “Making AI Less Thirsty” (Li et al. 2025). This requires determining water usage effectiveness (<em>WUE</em>) for both onsite and offsite of data centers and energy efficiency onsite (<em>PUE</em>) to combine to calculate the total water footprint:
+	\[{WaterOperational} = E \cdot [{WUE}_{onsite} + {PUE} \cdot {WUE}_{offsite}]\] where <em>E</em> is the energy consumed by the model for a request (calculated following the methods above) and
+	\[{WUE}_{offsite} = \frac{\sum_k b_{k,t} \cdot EWIF_{k}}{\sum_kb_{k,t}}\] where <em>b<sub>k,t</sub></em> denotes the amount of electricity generated from fuel type k at time t for the grid serving the data center and <em>EWIF<sub>k</sub></em> denotes the electricity water intensity factor for fuel type k.
+	</p>
+	<p>To determine <em>PUE</em> (Power Usage Effectiveness, or energy efficiency of the data center) and <em>WUE<sub>onsite</sub></em> (water efficiency onsite a data center) values, we use self-reported values by Microsoft for their data centers, as OpenAI reportedly leases Microsoft data centers for ChatGPT models (Microsoft 2025). Unfortunately, the locations they have values for are limited so we are forced to use high-level values for the Americas, Asia Pacific, Europe & Middle East & Africa, or Global. This is an area of uncertainty due to high-level values and use of assumptions as the specific, local-level data we desired was not available. </p>
+	<p>To determine <em>WUE<sub>offsite</sub></em> (water efficiency of energy production offsite) values, we found datasets containing the electricity mix of the energy grid by location and water efficiency for different energy production fuel types. For the energy grid, we found a dataset containing percentages of each fuel type in the energy grid by state in the U.S. in the year 2023 from the U.S. EPA's Emissions & Generation Resource Integrated Database (eGRID), a comprehensive source of data on almost all electric power generated in the U.S. This dataset is based on available plant-specific data for all U.S. electricity generating plants that provide power to the electric grid (U.S. Environmental Protection Agency 2025a). We also use a dataset of the Canadian energy grid by province from the year 2023 created by Canada Energy Regulator (Canada Energy Regulator 2026). Outside of the U.S. and Canada, we found yearly, country-level electricity generation data for over 200 geographies, collected from multi-country datasets and national sources for the year 2024 (Ember 2026). For water efficiency we found a dataset containing L/kWh values for the following fuel types: wind, solar, gas, geothermal, nuclear, coal, oil, hydropower, and biomass (Jin et al. 2019; Visualizing Energy 2023). These datasets were utilized in combination to calculate the electricity water intensity factor for <em>WUE<sub>offsite</sub></em>.</p>
+	<p>In addition to calculating water consumption, we also determine the Adjusted Water Impact following methods from “Not All Water Consumption Is Equal: A Water Stress Weighted Metric for Sustainable Computing” (Wu et al. 2025). This metric evaluates the impact of water consumption by factoring in spatial and temporal variations in water stress and is calculated for the aggregated data and scaled up data, rather than for each individual user. To calculate this we use the following formula from Wu et al. (2025):
+\[{AWI} = (W_{on} + W_{off}) \cdot {WSF}_b\] where <em>W<sub>on</sub></em> and <em>W<sub>off</sub></em> refer to the water consumption on and offsite (calculated in the previous step) and <em>WSF<sub>b</sub></em> refers to the water stress factor at the hydrological basin b. This water stress factor can be calculated with prioritization of short or long-term effects. For this project, we calculate a value for short, mid, and long-term for comparison. For short-term prioritization, the immediate water stress current impact can be calculated as: 
+\[{WSF}_{b}^{short} = {WS}_{t_0,b}\] which denotes the water stress at basin b at time <em>t<sub>0</sub></em>. To calculate the mid-term and long-term prioritization, we employ a discounting approach inspired by environmental economics: \[{WSF}_b^{long} = \sum_{t \in T} w_t \cdot {WS}_{t,b}\] where <em>WS<sub>t,b</sub></em> refers to the water stress at time t and hydrological basin b and <em>w<sub>t</sub></em> is computed using a discount rate &gamma; to reflect future uncertainty and potential impact: \[w_t = \frac{w_{t}^{'}}{\sum_{t^{'} \in T} w_{t^{'}}^{'}} &emsp;,&emsp; w_{t}^{'} = \frac{1}{(1 + \gamma)^{t-t_0}}\] where <em>t<sub>0</sub></em> is the baseline year and T is the set of years considered. The lower the discount rate, the more weight on future water stress, while higher rates prioritize short-term impacts. We set the discount rate to the values 1% (long-term impact prioritization) and 10% (mid-term impact prioritization).
+For our calculations, we consider the following years: 2019 as our baseline and 2030, 2050, and 2080 as our set of future years. To determine the hydrological basin, we query the Aqueduct 4.0 dataset to determine the watershed ID that is unique to each watershed basin (World Resources Institute 2024; Data Center Map 2024). Both current and projected water stress values for 2019, 2030, 2050, and 2080 can then be retrieved from the Aqueduct 4.0 dataset to complete the calculations of the Adjusted Water Impact (Kuzma et al. 2023). These AWI calculations are then completed for each watershed we have collected data from. As some counties are located within the same watershed their water consumption totals are combined for AWI calculations.</p>
+	<p>The Adjusted Water Impact metric from Wu et al. (2025) accounts for temporal variation in water stress by using a discounting approach inspired by environmental economics. We currently only include AWI calculations for the United States and Canada. We also chose to adopt the business as usual projection of water stress from Aqueduct 4.0 (as Wu et al. (2025) does).</p>
+	</div>
+	<h2>Carbon Calculations</h2>
+		<div class="calculations">
+		<p>Carbon emission calculations follow a similar structure to water consumption methods, but are inspired by the methods in Rincè et al. 2025. The carbon emissions, <em>C</em> for a single request are estimated by
+			\[C=E_{request} \cdot F_{em}\]
+			where <em>E<sub>request</sub></em> is the energy consumed (calculated using methodology above) and <em>F<sub>em</sub></em> is the carbon intensity of the electricity mix being used at the given location. To determine <em>F<sub>em</sub></em> we use the same electricity mix datasets of the U.S. by state, Canada by province, and country level estimates for 200 geographies as we do for water consumption calculations. We use the carbon intensity in g/kWh of the fuel types coal, gas, wind, solar, biomass, hydro, nuclear, and geothermal (reported by Ember 2022). These datasets were utilized in combination to calculate the electricity carbon intensity factor <em>F<sub>em</sub></em> for the location of a single request.</p>
+		</div>
+	<h2>References:</h2>
+		<div id="references">
+		<ol>
+			<li class="ref">Artificial Analysis (2026). <em>LLM API Providers Leaderboard - Comparison of over 500 AI Model endpoints</em>. https://artificialanalysis.ai/leaderboards/providers. Accessed June 2026.</li>
+			<li class="ref">Canada Energy Regulator (2026). <em>Canada's Energy Future Data Appendices</em>. https://doi.org/10.35002/zjr8-8x75. Accessed June 2026.</li>
+			<li class="ref"><em>Data Center Map (2024)</em>. https://www.datacentermap.com/usa/. Accessed 21 November 2025.</li>
+			<li class="ref">Ember (2022). <em>Ember Subnational Data Methodology</em>. https://files.ember-energy.org/public-downloads/ember_subnational_data_methodology.pdf. Accessed June 2026.</li>
+			<li class="ref">Ember (2026). <em>Yearly Electricity Data</em>. https://ember-energy.org/data/yearly-electricity-data/.</li>
+			<li class="ref">Jin, Yi, Paul Behrens, Arnold Tukker, and Laura Scherer (Nov. 2019). “Water Use of Electricity Technologies: A Global Meta-Analysis”. In: Renewable and Sustainable Energy Reviews 115, p. 109391. DOI: 10.1016/j.rser.2019.109391.</li>
+			<li class="ref">Kuzma, Samantha, Marc FP Bierkens, Shivani Lakshman, Tianyi Luo, Liz Saccoccia, Edwin H Sutanudjaja, and Rens Van Beek (2023). “Aqueduct 4.0: Updated decision-relevant global water risk indicators”. In: Accessed 21 November 2025. URL: https://doi.org/10.46830/writn.23.00061.</li>
+			<li class="ref">Microsoft (2025). <em>Measuring Energy and Water Efficiency for Microsoft Datacenters</em>. https://datacenters.microsoft.com/sustainability/efficiency/. Accessed 21 November 2025.</li>
+			<li class="ref">Rincé, Samuel and Banse Adrien (July 2025). “EcoLogits: Evaluating the Environmental Impacts of Generative AI”. In: Journal of Open Source Software 10.111, p. 7471. DOI:10.21105/joss.07471. URL: https://joss.theoj.org/papers/10.21105/joss.07471.</li>
+			<li class="ref">U.S. Environmental Protection Agency (June 2025a). <em>Emissions & Generation Resource Integrated Database (eGRID) 2023</em>. https://www.epa.gov/egrid/detailed-data. Revision 2, Released June 12, 2025.</li>
+			<li class="ref">Visualizing Energy (2023). <em>Water consumption by electricity generation technologies (Dataset ve136.01)</em>. https://visualizingenergy.org. Data compiled from Jin et al. (2019). Accessed: 2026-04-21.</li>
+			<li class="ref">World Resources Institute (2020). <em>Guidance for Calculating Water Use Embedded in Purchased Electricity</em>. https://www.wri.org/research/guidance-calculating-water-useembedded-purchased-electricity. Accessed 10 October 2025.</li>
+			<ol><li class="ref">– (2024). <em>Aqueduct Water Risk Atlas</em>. https://www.wri.org/applications/aqueduct/water-risk-atlas. Accessed 5 October 2025.</li></ol>
+			<li class="ref">Wu, Yanran, Inez Hua, and Yi Ding (2025). “Not all water consumption is equal: A water stress weighted metric for sustainable computing”. In: ACM SIGENERGY Energy Informatics Review 5.2. Accessed 4 October 2025, pp. 84–90. URL: https://doi.org/10.1145/3757892.3757904.</li>
+		</ol>
+		</div>
+</body>
+</html>
