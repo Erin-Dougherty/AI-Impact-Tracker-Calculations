@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>AI Impact Tracker Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         * {
            box-sizing: border-box;
@@ -17,8 +18,16 @@
            line-height: 1.5;
            color: #555;
 	}
+	.table-container {
+ 	   width: 93%;
+    	   margin: 0 auto;
+     	   overflow-x: auto;
+    	   -webkit-overflow-scrolling: touch; /* Smooth scrolling for iOS */
+	}
         table {
-           width: 93%;
+           /*width: 93%;*/
+	   width: 100%;
+    	   min-width: 600px;
            background-color: white;
            border-radius: 10px;
 	   border-collapse: collapse;
@@ -179,6 +188,39 @@
         .dropdown-content.closed {
             display: none !important;
         }
+	@media (max-width: 600px) {
+    	    h1 {
+                font-size: 24px; /* Shrinks the text for mobile */
+    	    }
+    	    header {
+        	height: auto; /* Lets the header expand if text wraps */
+        	padding: 20px 10px;
+    	    }
+	}
+	@media (max-width: 600px) {
+    	    ul.nav-box {
+        	flex-direction: column; /* Stacks links vertically */
+        	align-items: center;    /* Centers links */
+        	width: 93%;             /* Matches your table's layout width */
+        	margin: 10px auto;      /* Centers the box on the page */
+    	    }
+
+    	    ul.nav-box li {
+        	width: 100%;            /* Makes each link container full width */
+        	text-align: center;
+    	    }
+
+	    ul.nav-box li a {
+        	padding: 12px 10px;     /* Redesigns target area for thumbs */
+        	border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Subtle separator */
+    	    }
+
+	    ul.nav-box li:last-child a {
+        	border-bottom: none;    /* Removes final border line */
+    	    }
+	}
+
+	
     </style>
 	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
@@ -192,7 +234,7 @@
 		<li><a href="https://aiimpacttracker.cs.haverford.edu/about-us">About Us</a></li>
 	</ul>
 	<p id="description">
-          AI Impact Tracker estimates the environmental footprint of ChatGPT responses by tracking the number of output tokens in a response. (Tokens are sort of like the word count.) Using the user&apos;s coarse location, based on the country, or state or province and watershed (if in the United States or Canada), the extension estimates carbon, water, and energy usage associated with that activity. The extension only collects the number of output tokens and coarse location data. It does not collect or store the contents of user prompts or responses. This website displays and analyzes the aggregated usage and environmental data to consider large-scale impacts of generative AI.
+		<a href="https://chromewebstore.google.com/detail/ai-impact-tracker/gopcpgaafebifedebipjgfnmmiogddaj?">AI Impact Tracker</a> quantifies the environmental footprint of ChatGPT usage during the inference stage. Using the user's coarse location, based on the country, or state or province and watershed (if in the United States or Canada), AI Impact Tracker estimates the carbon, water, and energy usage associated with that activity. Specifically, we calculate the amount of energy, water, and carbon associated with each individual query response, focusing only on the inference stage (and leaving out the energy consumed in other stages of ChatGPT's lifecycle including its training) leading to likely underestimating the full environmental footprint of using ChatGPT. The extension collects the number of output tokens in a generated response and coarse location data and securely and anonymously sends this to a backend server that both performs these calculations and displays and analyzes aggregated usage and environmental data on this website to consider larger-scale impacts of generative AI. The goal of this project is to raise public awareness to these impacts, both at an individual level and at community-wide levels by sharing analysis of aggregated data here and privately displaying individual estimates in the extension's popup window for individual users. 
         </p>
 	<!-- Tab Navigation Links -->
         <div class="tab-menu">
@@ -204,6 +246,7 @@
 	<!-- Tab Content Blocks -->
         <div id="overview" class="tab-pane active">
 	<h1> Total Users: <span id="totalUsers"></span></h1>
+	<div class="table-container">
 	<table>
 	 <tr>
 	    <th></th>
@@ -232,7 +275,7 @@
 	   <td id="avgWater"></td>
 	   <td id="avgWaterBottles"></td>
          </tr>
-	<tr>
+	<!-- <tr>
            <th>Predicted Haverford Annual Academic Usage</th>
            <td id="totalSchoolTokens"></td>
            <td id="totalSchoolKWH"></td>
@@ -240,17 +283,19 @@
            <td id="totalSchoolMiles"></td>
            <td id="totalSchoolWater"></td>
            <td id="totalSchoolWaterBottles"></td>
-         </tr>
+         </tr> -->
 	</table>
+	</div>
 	<div id="tokensChart" class="chart"></div>
 	<div id="trafficChart" class="chart"></div>
 	</div>
 	<div id="carbon" class="tab-pane">
 		<div id="carbonChart" class="chart"></div>
-		<div id="carbonBellChart" class="chart"></div>
+		<!-- <div id="carbonBellChart" class="chart"></div>-->
 	</div>
 	<div id="water" class="tab-pane">
 	<h2>Adjusted Water Impact (AWI) by Watershed</h2>
+	<div class="table-container">
 	<table id="awi-table">
 	    <thead>
 	        <tr>
@@ -264,11 +309,12 @@
             <tbody>
             </tbody>
 	</table>
+	</div>
 	<div id="summary"></div>
 	<div id="waterBarChart" class="chart"></div>
 	<div id="waterBoxChart" class="chart"></div>
 	<div id="waterResponseBoxChart" class="chart"></div>
-	<div id="projectedAnnualWater" class="chart"></div>
+	<!-- <div id="projectedAnnualWater" class="chart"></div> -->
 	</div>
 		
 	<div id="map" class="tab-pane">

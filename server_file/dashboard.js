@@ -4,7 +4,7 @@ async function loadDashboard() {
 	const data = await res.json();
 
 	const summary = document.getElementById("summary");
-	const cutoff = new Date("03/31/2026");
+	const cutoff = new Date("06/24/2026");
         const today = new Date();
         const msPerDay = 1000 * 60 * 60 * 24;
 	const sampleDays = Math.floor((today - cutoff) / msPerDay) + 1;
@@ -116,10 +116,10 @@ async function loadDashboard() {
 	const yAvgTraffic = dayOrder.map(day =>
 		countByDay[day] ? trafficByDay[day] / countByDay[day] : 0
 	);
-	document.getElementById("totalSchoolKWH").textContent = totalSchoolKWH.toFixed(2);
+	/* document.getElementById("totalSchoolKWH").textContent = totalSchoolKWH.toFixed(2);
 	document.getElementById("totalSchoolCarbon").textContent = totalSchoolCarbon.toFixed(2);
 	document.getElementById("totalSchoolMiles").textContent = totalSchoolMiles.toFixed(2);
-	document.getElementById("totalSchoolTokens").textContent = totalSchoolTokens.toFixed(2);
+	document.getElementById("totalSchoolTokens").textContent = totalSchoolTokens.toFixed(2);*/
 	document.getElementById("totalUsers").textContent = numUsers;
 	document.getElementById("totalTokens").textContent = totalTokens.toFixed(2);
 	document.getElementById("avgUserTokens").textContent= avgUserTokens.toFixed(2);
@@ -133,23 +133,44 @@ async function loadDashboard() {
 	document.getElementById("totalWater").textContent = totalWater.toFixed(2);
 	document.getElementById("totalWaterBottles").textContent = totalWaterBottles.toFixed(2);
 	document.getElementById("avgWaterBottles").textContent = avgWaterBottles.toFixed(2);
-	document.getElementById("totalSchoolWater").textContent = totalSchoolWater.toFixed(2);
-	document.getElementById("totalSchoolWaterBottles").textContent = totalSchoolWaterBottles.toFixed(2);
+	/* document.getElementById("totalSchoolWater").textContent = totalSchoolWater.toFixed(2);
+	document.getElementById("totalSchoolWaterBottles").textContent = totalSchoolWaterBottles.toFixed(2);*/
 
 	const tokensByDate = {};
-	cleanedData.forEach(row => {
+	/*cleanedData.forEach(row => {
 		if (!tokensByDate[row.date]) {
 			tokensByDate[row.date] = 0;
 		}
 		tokensByDate[row.date] += row.tokens;
-	});
+	});*/
+	waterByDate = {};
+	// generate an array of date keys and initialize them all to 0
+	for (let i = 1; i <= sampleDays; i++) {
+        	// Calculate forward from the clean midnight cutoff date
+        	const currentTimestamp = cutoff.getTime() + (i * msPerDay);
+        	const currentDateObj = new Date(currentTimestamp);
+        	const dateKey = currentDateObj.toLocaleDateString('en-US'); 
+        
+        	tokensByDate[dateKey] = 0;
+		waterByDate[dateKey] = 0;
+	}
+        // loop through cleanedData to sum up the tokens
+        cleanedData.forEach(row => {
+                // only add tokens if the date exists in our data
+                if (tokensByDate[row.date] !== undefined) {
+                        tokensByDate[row.date] += row.tokens;
+                }
+		if (waterByDate[row.date] !== undefined) {
+			waterByDate[row.date] += row.water;
+		}
+        });
 
 	const chartDates = Object.keys(tokensByDate).sort((a, b) => {
 		return new Date(a) - new Date(b);
 	});
 	const chartTokens = chartDates.map(date => tokensByDate[date]);
 
-	const waterByDate = {};
+	/*const waterByDate = {};
 	cleanedData.forEach(row => {
 		// Ensure the date entry exists
 		if (!waterByDate[row.date]) {
@@ -157,7 +178,7 @@ async function loadDashboard() {
 		}
 		// Add water_ml
 		waterByDate[row.date] += row.water;
-	});
+	});*/
 	const waterDates = Object.keys(waterByDate).sort((a, b) => {
 		return new Date(a) - new Date(b);
 	});
@@ -266,7 +287,7 @@ async function loadDashboard() {
 		xaxis: {title: "Date"},
 		yaxis: {title: "Water (mL)"}
 	});
-	Plotly.newPlot("carbonBellChart", [
+	/*Plotly.newPlot("carbonBellChart", [
             {
                 x: scaledAnnualCarbon,
                 type: "histogram",
@@ -277,8 +298,8 @@ async function loadDashboard() {
             title: "Projected Academic-Year Carbon per User (Scaled to 1400 Users)",
             xaxis: { title: "Annual Carbon per User (g)" },
             yaxis: { title: "Number of Users" }
-        });
-	Plotly.newPlot("projectedAnnualWater", [
+        });*/
+	/* Plotly.newPlot("projectedAnnualWater", [
             {
                 x: scaledAnnualWater,
                 type: "histogram",
@@ -289,7 +310,7 @@ async function loadDashboard() {
             title: "Projected Academic-Year Water per User (Scaled to 1479 Users)",
             xaxis: { title: "Annual Water per User (mL)" },
             yaxis: { title: "Number of Users" }
-        });
+        }); */
         
         renderUSAMap(data, 'carbon_g', 'Carbon', 'CO2e (g)','carbonMap', 'g', 'Reds', false);
         renderUSAMap(data, 'water_ml', 'Water', 'Water (ml)', 'waterMap', 'ml', 'Blues', true);

@@ -21,6 +21,10 @@
       border:solid;
       padding:10px 10px;
     }
+    .page-body {
+      padding-left:10%;
+      padding-right:10%;
+    }
     header {
       background-color: rgb(232, 242, 255) /*#f1f1f1*/;
       text-align: center;
@@ -68,7 +72,7 @@
                 <li><a href="https://aiimpacttracker.cs.haverford.edu/extension">Chrome Extension</a></li>
 		<li><a href="https://aiimpacttracker.cs.haverford.edu/about-us">About Us</a></li>
         </ul>
-
+    <div class="page-body">
     <p><b>Project Goals</b></p>
     <p> The AI Impact Tracker chrome extension was created to quantify the environmental impact of ChatGPT usage in terms of carbon, water, and energy consumed. The goal of this project is to raise public awareness to these impacts, both at an individual level and at community-wide levels by sharing analysis of aggregated data on a public website and privately displaying individual estimates in the extension’s popup window for individual subjects. We will also use our research and the data we collect to determine if publicly reported environmental impact estimates align with our data and study general trends of ChatGPT usage in our userbase.</p>
     <p><b>Collected Data</b></p>
@@ -92,5 +96,6 @@
     <p>The use of information received from Google APIs will adhere to the Chrome Web Store User Data Policy, including the Limited Use requirements.</p>
     <p><b>Potential Risks</b></p>
     <p>Collected data will be stored on a server and we will strive to maintain subject confidentiality by only sharing aggregated and averaged data publicly. There is a low risk for identification if a security breach were to occur as our collection of coarse location data alongside an anonymous user id could potentially be used to determine the identity of our subjects. However, the chance of this occurring is low and the level of potential harm from identification is also low as only the levels of usage in terms of number of tokens (e.g. words) used per day, and their coarse location could be determined. The content or text ChatGPT generates is not ever transmitted to the server, so the user prompts and topic of use cannot be determined.</p>
+    </div>
 </body>
 </html>

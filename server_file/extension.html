@@ -23,7 +23,18 @@
       border:solid;
       border-color:rgb(247, 247, 247);
     }
-    .header-button { background-color: rgb(28, 135, 201); border: none; color: white; padding: 10px 17px; text-align: center; text-decoration: none; display: inline-block; font-size: 15px; margin: 8px 2px; cursor: pointer; }
+    .page-body{
+      padding-left:10%;
+      padding-right:10%;
+    }
+    .header-button { background-color: #00A896; border: none; color: white; padding: 10px 17px; text-align: center; text-decoration: none; display: inline-block; font-size: 20px; margin: 10px 10px; cursor: pointer; 
+	box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.15);
+  	transition: all 0.2s ease-in-out;}
+    .header-button:hover {
+  	background-color: #0056b3;       /* Darkens the background slightly */
+  	box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.25); /* Deepens the shadow */
+  	transform: translateY(-1px);     /* Lifts the link up 1 pixel */
+    }
     #description {
       border:solid;
       padding:10px 10px;
@@ -75,6 +86,7 @@
 		<li><a href="https://aiimpacttracker.cs.haverford.edu/about-us">About Us</a></li>
         </ul>
 </div>
+<div class="page-body">
 <div id="overview">
   <img id="icon" src="https://lh3.googleusercontent.com/scyyOG4OMtNo1YDFMEp5YgQSazQNOLsB-T_hOliqScCxMRT1dPkKcp1oOy8b44ji3LxcgJbFyd8zNWe7CYsw4BhZ=s120" alt="AI Impact Tracker Icon" width="150px">
   <img src="https://lh3.googleusercontent.com/xGeZAO8IR_UaaU1CzdnAGUYVwaz8PYVZCV3WtNJzJKPc8xNZSXJ6ODJehXq9RK5YilFNs274uSEAHKCmBIdXsehr=s1280-w1280-h800" alt="extension screenshot" width="500px">
@@ -82,7 +94,7 @@
   <p>Quantify the environmental impacts of ChatGPT usage including carbon, water, and energy consumption.</p>
   <p>Estimate the environmental footprint of your ChatGPT usage in real time! Using the length of a generated response and your coarse location, AI Impact Tracker quantifies the carbon, water, and energy usage associated with your activity. 
   </p>
-  <p>Click <a href="https://chromewebstore.google.com/detail/ai-impact-tracker/gopcpgaafebifedebipjgfnmmiogddaj?authuser=0&hl=en">here</a> to install!</p>
+  <a href="https://chromewebstore.google.com/detail/ai-impact-tracker/gopcpgaafebifedebipjgfnmmiogddaj?authuser=0&hl=en" class="header-button"><b>Click here to install!</b></a>
   <p>Key Features:
     <ul>
       <li>Estimates environmental impacts by measuring output tokens (similar to word count) in generated responses.</li>
@@ -96,6 +108,7 @@
       <li>We strictly limit collection to the number of output tokens, your coarse location, and the date. Everything else remains completely private.</li>
     </ul>
   </p>
+</div>
 </div>
 </body>
 </html>

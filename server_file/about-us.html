@@ -58,7 +58,7 @@
       background-color: #dddddd;
       color: black;
     }
-    .person{
+    <!--.person{
       display: inline-block;
       vertical-align: top;
       width:250px;
@@ -74,9 +74,17 @@
     }
     .person p{
       margin:5px 5px;
+    }-->
+    p {
     }
     #main-body{
-      padding: 0 40px;
+      padding-left:10%;
+      padding-right:10%;
+    }
+    a.persons {
+      color: #000000;
+      text-decoration: underline; /* Forces the underline to be black */
+      text-decoration-color: #000000;
     }
   </style>
 </head>
@@ -90,9 +98,9 @@
 		<li><a href="https://aiimpacttracker.cs.haverford.edu/about-us">About Us</a></li>
         </ul>
 	<div id="main-body">
-	<p id="description">AI Impact Tracker is a Haverford College undergraduate senior thesis project developed by Peter Del Col ('26) and Erin Dougherty ('26) and advised by Professor Sorelle Friedler.</p>
+	<p >AI Impact Tracker is a Haverford College undergraduate senior thesis project developed by Peter Del Col ('26) and Erin Dougherty ('26) and advised by Professor Sorelle Friedler.</p>
 	<h2>Team and Collaborators</h2>
-	<div class="person">
+	<!-- <div class="person">
             <h4>Erin Dougherty</h4>
             <p>Haverford College graduate ('26)</p>
         </div>
@@ -103,8 +111,17 @@
         <div class="person">
             <h4><a href="https://sorelle.friedler.net/">Sorelle Friedler</a></h4>
             <p>Shibulal Family Professor of Computer Science and Co-Director of the Kim Institute for Ethical Inquiry and Leadership
-Haverford College</p>
-        </div>	
+Haverford College</p>-->
+	    <p><a href="https://sorelle.friedler.net/" class="persons"><b>Sorelle Friedler</b></a> is the Shibulal Family Professor of Computer Science at Haverford College, a Nonresident Senior Fellow at The Brookings
+Institution, and the Chair of ACM's U.S. Technology Policy Committee. She previously served as Assistant Director for Data and 
+Democracy in the White House Office of Science and Technology Policy where she co-authored the AI Bill of Rights and contributed to
+federal policy on AI. Her research focuses on how AI impacts society, and she is a Co-Founder of the ACM Conference on Fairness, 
+Accountability, and Transparency (FAccT).</p>
+	    <p><b>Erin Dougherty</b> is a recent graduate of Haverford College with a major in Computer Science and minors in 
+Environmental Studies and Data Science. This project reprsents her passion for intersecting data and technology with environmental
+impact, a path she plans to puruse beyond graduation.</p>
+	    <p><b>Peter Del Col</b></p>
+        <!--</div>-->	
 	</div>
 </body>
 </html>

@@ -19,13 +19,17 @@ ALPHA      = 1.17e-6
 BETA       = -1.12e-2
 GAMMA      = 4.05e-5
 BATCH_SIZE = 64
-P_ACTIVE_B = 300 #97
-P_TOTAL_B  = 900 #45
+#https://docs.google.com/spreadsheets/d/1XkPTkrGxpwWpIVIxpVvgRJuInSZsqbndTQbFGcHhdd0/edit?gid=803926269#gid=803926269
+GPT_P_ACTIVE_B = 300 #for gpt-5.5 #97
+GPT_P_TOTAL_B  = 900 #for gpt-5.5 #45
+P_ACTIVE_Bs = {"GPT": 300, "google_overview": 100, "google_ai_mode":240}
+P_TOTAL_Bs = {"GPT": 900, "google_overview":300, "google_ai_mode":900}
 Q_BITS     = 16
 M_GPU_GB   = 80
 GPU_INSTALLED = 8
 #https://artificialanalysis.ai/leaderboards/providers
-TOKENS_PER_SECOND = 66
+GPT_TOKENS_PER_SECOND = 65 # for gpt-5.5 (high)
+TOKENS_PER_SECONDs = {"GPT": 65, "google_overview": 272,"google_ai_mode":159}
 miles_per_kg_of_co2 = 3.79
 
 BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
@@ -56,6 +60,12 @@ baseline_water_stress_path = os.path.join(BASE_DIR, "input_data", "watershed_bas
 baseline_water_stress = pd.read_csv(baseline_water_stress_path)
 countries_region_path = os.path.join(BASE_DIR, "input_data", "countries_by_region.csv")
 countries_by_region = pd.read_csv(countries_region_path)
+
+#Google PUEs 2025:  https://datacenters.google/efficiency/
+google_pues_path = os.path.join(BASE_DIR, "input_data", "Google_PUEs.csv")
+Google_PUEs = pd.read_csv(google_pues_path)
+Google_PUEs['PUE'] = pd.to_numeric(Google_PUEs['PUE'], errors='coerce')
+
 us_state_to_abbrev = { #https://gist.github.com/rogerallen/1583593
 	"Alabama": "AL",
 	"Alaska": "AK",
@@ -116,19 +126,20 @@ us_state_to_abbrev = { #https://gist.github.com/rogerallen/1583593
 	"Virgin Islands, U.S.": "VI",
 }
 #https://datacenters.microsoft.com/sustainability/efficiency/ for PUE and WUE_onsite
-PUEs = {
+Microsoft_PUEs = {
 	"Americas":1.16,
 	"Global": 1.17,
 	"Asia_Pacific": 1.28,
 	"Europe_Middle_East_and_Africa": 1.16
 }
-WUE_onsite = {
+Microsoft_WUEs_onsite = {
 	"Americas":0.34,
 	"Global": 0.27,
 	"Asia_Pacific": 0.25,
 	"Europe_Middle_East_and_Africa": 0.03
 }
-
+#https://arxiv.org/pdf/2508.15734
+Google_WUE_onsite = 1.15
 #Constant calculations
 #total energy consumed by a single GPU over a request period (Wh)
 def _compute_gpu_count(p_total_b: float, q_bits: int, m_gpu_gb: float) -> int:
@@ -140,8 +151,14 @@ def _compute_gpu_count(p_total_b: float, q_bits: int, m_gpu_gb: float) -> int:
 def _compute_per_token_coeff(alpha: float, beta: float, gamma: float, batch_size: int, p_active_b: float) -> float:
 	return alpha * math.exp(beta * batch_size) * p_active_b + gamma
 
-GPU_COUNT       = _compute_gpu_count(P_TOTAL_B, Q_BITS, M_GPU_GB)
-PER_TOKEN_COEFF = _compute_per_token_coeff(ALPHA, BETA, GAMMA, BATCH_SIZE, P_ACTIVE_B)
+GPU_COUNTs = {"GPT": _compute_gpu_count(P_TOTAL_Bs['GPT'], Q_BITS, M_GPU_GB), 
+	"google_overview":_compute_gpu_count(P_TOTAL_Bs['google_overview'], Q_BITS, M_GPU_GB),
+	"google_ai_mode":_compute_gpu_count(P_TOTAL_Bs['google_ai_mode'], Q_BITS, M_GPU_GB)}
+PER_TOKEN_COEFFs = {"GPT": _compute_per_token_coeff(ALPHA, BETA, GAMMA, BATCH_SIZE, P_ACTIVE_Bs['GPT']),
+	"google_overview": _compute_per_token_coeff(ALPHA, BETA, GAMMA, BATCH_SIZE, P_ACTIVE_Bs['google_overview']),
+	"google_ai_mode": _compute_per_token_coeff(ALPHA, BETA, GAMMA, BATCH_SIZE, P_ACTIVE_Bs['google_ai_mode'])}
+GPU_COUNT       = _compute_gpu_count(GPT_P_TOTAL_B, Q_BITS, M_GPU_GB)
+PER_TOKEN_COEFF = _compute_per_token_coeff(ALPHA, BETA, GAMMA, BATCH_SIZE, GPT_P_ACTIVE_B)
 
 def parse_location_string(location: str) -> dict:
 	# Split by comma and strip whitespace
@@ -182,22 +199,57 @@ def compute_WUE_offsite(energy: int, energy_grid_mix: pd, country: str) -> float
 	print("WUE_off = " + str(WUE_off))
 	return WUE_off
 
+def get_WUE_onsite(location, model:str) -> float:
+	if model == "GPT":
+		if countries_by_region[countries_by_region['Country'] == location["country"]]['Region'].values[0] == "Americas":
+			return Microsoft_WUEs_onsite["Americas"]
+		elif countries_by_region[countries_by_region['Country'] == location["country"]]['Region'].values[0] == "Asia-Pacific":
+			return Microsoft_WUEs_onsite["Asia_Pacific"]
+		elif countries_by_region[countries_by_region['Country'] == location["country"]]['Region'].values[0] == "EMEA":
+			return Microsoft_WUEs_onsite["Europe_Middle_East_and_Africa"]
+		else:
+			return Microsoft_WUEs_onsite["Global"]
+	else:
+		return Google_WUE_onsite
+
+def get_PUE(location_string:str , model:str) -> float:
+	location = parse_location_string(location_string)
+	if model == "GPT":
+		#find PUE for given location
+		if countries_by_region[countries_by_region['Country'] == location["country"]]['Region'].values[0] == "Americas":
+			return Microsoft_PUEs["Americas"]
+		elif countries_by_region[countries_by_region['Country'] == location["country"]]['Region'].values[0] == "Asia-Pacific":
+			return Microsoft_PUEs["Asia_Pacific"]
+		elif countries_by_region[countries_by_region['Country'] == location["country"]]['Region'].values[0] == "EMEA":
+			return Microsoft_PUEs["Europe_Middle_East_and_Africa"]
+		else:
+			return Microsoft_PUEs["Global"]
+	else:
+		if location["country"] == "United States":
+			if location["state"] in Google_PUEs["State"].values:
+				return Google_PUEs[Google_PUEs["State"] == location["state"]]["PUE"].values[0]
+		elif location["country"] in Google_PUEs["Country"].values:
+			return Google_PUEs[Google_PUEs["Country"] == location["country"]]["PUE"].values[0]
+		return Google_PUEs[Google_PUEs["Country"] == "Global"]["PUE"].values[0]
+
 #calculate gallons consumed for given kwh in the given location
-def kwh_to_ml(kwh: float, location_string: str) ->float:
+def kwh_to_ml(kwh: float, location_string: str, model: str) ->float:
 	location = parse_location_string(location_string)
 	#find PUE and WUE_onsite for given location
-	if countries_by_region.loc[countries_by_region['Country'] == location["country"], 'Region'].iloc[0] == "Americas":
-		PUE = PUEs["Americas"]
-		WUE_on = WUE_onsite["Americas"]
-	elif countries_by_region[countries_by_region['Country'] == location["country"]]['Region'].values[0] == "Asia-Pacific":
-		PUE = PUEs["Asia_Pacific"]
-		WUE_on = WUE_onsite["Asia_Pacific"]
-	elif countries_by_region[countries_by_region['Country'] == location["country"]]['Region'].values[0] == "EMEA":
-		PUE = PUEs["Europe_Middle_East_and_Africa"]
-		WUE_on = WUE_onsite["Europe_Middle_East_and_Africa"]
-	else:
-		PUE = PUEs["Global"]
-		WUE_on = WUE_onsite["Global"]
+	PUE = get_PUE(location_string, model)
+	WUE_on = get_WUE_onsite(location, model)
+#	if countries_by_region.loc[countries_by_region['Country'] == location["country"], 'Region'].iloc[0] == "Americas":
+#		PUE = Microsoft_PUEs["Americas"]
+#		WUE_on = Microsoft_WUEs_onsite["Americas"]
+#	elif countries_by_region[countries_by_region['Country'] == location["country"]]['Region'].values[0] == "Asia-Pacific":
+#		PUE = Microsoft_PUEs["Asia_Pacific"]
+#		WUE_on = Microsoft_WUEs_onsite["Asia_Pacific"]
+#	elif countries_by_region[countries_by_region['Country'] == location["country"]]['Region'].values[0] == "EMEA":
+#		PUE = Microsoft_PUEs["Europe_Middle_East_and_Africa"]
+#		WUE_on = Microsoft_WUEs_onsite["Europe_Middle_East_and_Africa"]
+#	else:
+#		PUE = Microsoft_PUEs["Global"]
+#		WUE_on = Microsoft_WUEs_onsite["Global"]
 	#Find the electricity grid makeup
 	if location["country"] == "United States":
 		state_abbr = us_state_to_abbrev[location["state"]]
@@ -365,18 +417,18 @@ def get_fem(location: str) -> float:
 
         return fem
 
-def get_PUE(location: str) -> float:
-        location = parse_location_string(location)
+#def get_PUE(location: str) -> float:
+#        location = parse_location_string(location)
         #find PUE for given location
-        if countries_by_region.loc[countries_by_region['Country'] == location["country"], 'Region'].iloc[0] == "Americas":
-                PUE = PUEs["Americas"]
-        elif countries_by_region[countries_by_region['Country'] == location["country"]]['Region'].values[0] == "Asia-Pacific":
-                PUE = PUEs["Asia_Pacific"]
-        elif countries_by_region[countries_by_region['Country'] == location["country"]]['Region'].values[0] == "EMEA":
-                PUE = PUEs["Europe_Middle_East_and_Africa"]
-        else:
-                PUE = PUEs["Global"]
-        return PUE
+#        if countries_by_region.loc[countries_by_region['Country'] == location["country"], 'Region'].iloc[0] == "Americas":
+#                PUE = Microsoft_PUEs["Americas"]
+#        elif countries_by_region[countries_by_region['Country'] == location["country"]]['Region'].values[0] == "Asia-Pacific":
+#                PUE = Microsoft_PUEs["Asia_Pacific"]
+#        elif countries_by_region[countries_by_region['Country'] == location["country"]]['Region'].values[0] == "EMEA":
+#                PUE = Microsoft_PUEs["Europe_Middle_East_and_Africa"]
+#        else:
+#                PUE = Microsoft_PUEs["Global"]
+#        return PUE
 
 #returns the energy consumed by server without the GPUs (Wh)
 def _compute_e_server_gpu(latency):
@@ -384,14 +436,14 @@ def _compute_e_server_gpu(latency):
         return kws * 1000/ 3600
 
 #returns the latency (s) (the time it takes the model to respond to an inference)
-def _compute_latency(tokens_out: int):
-        f_L = 6.78e-4 * P_ACTIVE_B + 3.12e-4 * BATCH_SIZE + 1.94e-2
-        return min(tokens_out * f_L, tokens_out / TOKENS_PER_SECOND)
+def _compute_latency(tokens_out: int, model:str):
+        f_L = 6.78e-4 * P_ACTIVE_Bs[model] + 3.12e-4 * BATCH_SIZE + 1.94e-2
+        return min(tokens_out * f_L, tokens_out / TOKENS_PER_SECONDs[model])
 
-def calculate_kwh(tokens_out: int, PUE: float) -> float:
-	latency = _compute_latency(tokens_out)
+def calculate_kwh(tokens_out: int, PUE: float, model: str) -> float:
+	latency = _compute_latency(tokens_out, model)
 	e_server_gpu = _compute_e_server_gpu(latency)
-	e_gpu     = tokens_out * PER_TOKEN_COEFF
+	e_gpu     = tokens_out * PER_TOKEN_COEFFs[model]
 	e_server  = e_server_gpu + GPU_COUNT * e_gpu
 	e_request = e_server   * PUE
 	return e_request / 1000
@@ -401,18 +453,18 @@ def calculate_carbon(e_request: float, fem_gco2_per_kwh: float) -> float:
 	return co2_g
 
 
-FIELDNAMES = ["user_id", "tokens", "location", "date", "fem_gco2_per_kwh", "carbon_g", "kwh", "water_ml", "country", "state", "watershed", "state_code"]
+FIELDNAMES = ["user_id", "tokens", "location", "date", "fem_gco2_per_kwh", "carbon_g", "kwh", "water_ml", "country", "state", "watershed", "state_code", "model"]
 
-def backfill_carbon(path: str) -> None:
+def backfill_carbon(path: str, model:str) -> None:
         df = pd.read_csv(path)
         if "kwh" not in df.columns:
           df["kwh"] = df.apply(
-            lambda row: calculate_kwh(row["tokens"], get_PUE(row["location"])),
+            lambda row: calculate_kwh(row["tokens"], get_PUE(row["location"], model), model),
             axis=1
           )
         kwh_needs_calc = df["kwh"].isna() | (df["kwh"].astype(str).str.strip() == "")
         if kwh_needs_calc.any():
-                df.loc[kwh_needs_calc, "kwh"] = df.loc[kwh_needs_calc].apply(lambda r: calculate_kwh(r["tokens"],get_PUE(r["location"])),axis=1)
+                df.loc[kwh_needs_calc, "kwh"] = df.loc[kwh_needs_calc].apply(lambda r: calculate_kwh(r["tokens"],get_PUE(r["location"], model), model),axis=1)
         for col in ("fem_gco2_per_kwh", "carbon_g"):
                 if col not in df.columns:
                         df[col] = None
@@ -422,7 +474,7 @@ def backfill_carbon(path: str) -> None:
                 df.loc[needs_calc, "carbon_g"] = df.loc[needs_calc].apply(lambda r: calculate_carbon(float(r["kwh"]), float(r["fem_gco2_per_kwh"])),axis=1,)
         df[FIELDNAMES].to_csv(path, index=False)
 
-def backfill_water(path: str) -> None:
+def backfill_water(path: str, model: str) -> None:
         df = pd.read_csv(path)
         if "kwh" not in df.columns:
           df["kwh"] = df.apply(
@@ -433,7 +485,7 @@ def backfill_water(path: str) -> None:
                df["water_ml"] = None
         needs_calc = df["water_ml"].isna() | (df["water_ml"].astype(str).str.strip() == "")
         if needs_calc.any():
-                df.loc[needs_calc, "water_ml"] = df.loc[needs_calc].apply(lambda r: kwh_to_ml(float(r["kwh"]), str(r["location"])),axis=1,)
+                df.loc[needs_calc, "water_ml"] = df.loc[needs_calc].apply(lambda r: kwh_to_ml(float(r["kwh"]), str(r["location"]), model),axis=1,)
         df[FIELDNAMES].to_csv(path, index=False)
 
 def backfill_locations(path:str) -> None:
@@ -471,6 +523,17 @@ class EmissionEvent(BaseModel):
 
 class CSVRequest(BaseModel):
     data: List[EmissionEvent]
+    file_name: str
+    user_id: Optional[str] = None
+
+class GoogleEmissionEvent(BaseModel):
+    tokens: int
+    location: str
+    model: str
+    date: str
+
+class CSVGoogleRequest(BaseModel):
+    data: List[GoogleEmissionEvent]
     file_name: str
     user_id: Optional[str] = None
 
@@ -588,8 +651,8 @@ async def write_csv(req: CSVRequest, x_api_key: str = Header(default="")):
     os.makedirs("output_data", exist_ok=True)
     path = os.path.join("output_data", os.path.basename(req.file_name))
     if os.path.exists(path):
-        backfill_carbon(path)
-        backfill_water(path)
+        backfill_carbon(path, 'GPT')
+        backfill_water(path, 'GPT')
         backfill_locations(path)
 
     with open(path, "a", newline="") as f:
@@ -601,10 +664,10 @@ async def write_csv(req: CSVRequest, x_api_key: str = Header(default="")):
 
         for item in req.data:
             fem    = get_fem(item.location)
-            pue    = get_PUE(item.location)
-            kwh    = calculate_kwh(item.tokens, pue)
+            pue    = get_PUE(item.location, 'GPT')
+            kwh    = calculate_kwh(item.tokens, pue, 'GPT')
             co2_g = calculate_carbon(kwh, fem)
-            water_ml = kwh_to_ml(kwh, item.location)
+            water_ml = kwh_to_ml(kwh, item.location, 'GPT')
             location_dict = parse_location_string(item.location)
             state_name = location_dict['state']
             state_code = us_state_to_abbrev.get(state_name, None) if state_name else None
@@ -621,6 +684,7 @@ async def write_csv(req: CSVRequest, x_api_key: str = Header(default="")):
                 "state":location_dict['state'],
                 "watershed":location_dict['watershed_id'],
                 "state_code":state_code,
+                "model": 'GPT',
 		})
         df = pd.read_csv(path)
 
@@ -662,6 +726,92 @@ async def write_csv(req: CSVRequest, x_api_key: str = Header(default="")):
                f"Daily avg energy: {avg_kwh:.2f} kWh"
         ),
     }
+@api.post("/write-csv-google/")
+async def write_csv_google(req: CSVGoogleRequest, x_api_key: str = Header(default="")):
+    print(f"Received key: '{x_api_key}'")
+    print(f"Expected key: '{API_KEY}'")
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    user_id = req.user_id if req.user_id else str(uuid.uuid4())
+    os.makedirs("output_data", exist_ok=True)
+    path = os.path.join("output_data", os.path.basename(req.file_name))
+    if os.path.exists(path):
+        backfill_carbon(path, req.data[0].model)
+        backfill_water(path, req.data[0].model)
+        backfill_locations(path)
+
+    with open(path, "a", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
+
+        # If file is empty, write header once
+        if f.tell() == 0:
+            writer.writeheader()
+
+        for item in req.data:
+            fem    = get_fem(item.location)
+            pue    = get_PUE(item.location, item.model)
+            kwh    = calculate_kwh(item.tokens, pue, item.model)
+            co2_g = calculate_carbon(kwh, fem)
+            water_ml = kwh_to_ml(kwh, item.location, item.model)
+            location_dict = parse_location_string(item.location)
+            state_name = location_dict['state']
+            state_code = us_state_to_abbrev.get(state_name, None) if state_name else None
+            writer.writerow({
+                "user_id": user_id,
+                "tokens": item.tokens,
+                "location": item.location,
+                "date": item.date,
+                "fem_gco2_per_kwh": fem,
+                "carbon_g":        co2_g,
+                "water_ml": water_ml,
+                "kwh": kwh,
+                "country":location_dict['country'],
+                "state":location_dict['state'],
+                "watershed":location_dict['watershed_id'],
+                "state_code":state_code,
+                "model":'Google',
+                })
+        df = pd.read_csv(path)
+
+        df["date"] = pd.to_datetime(df["date"])
+        df["carbon_g"] = pd.to_numeric(df["carbon_g"], errors="coerce")
+
+        user_df = df[df["user_id"] == user_id].copy()
+
+        if user_df.empty:
+              return {"message": "JSON data appended to CSV file succesfully.", "file": path, "request_id": user_id,
+                        "user_data": "Welcome to AI Impact Tracker!"}
+        total_tokens    = int(user_df["tokens"].sum())
+        total_carbon_g = float(user_df["carbon_g"].sum())
+        first_date       = user_df["date"].min().date()
+        days_since_start = (date.today() - first_date).days + 1
+        avg_tokens_per_day = total_tokens    / days_since_start
+        avg_carbon_per_day = total_carbon_g / days_since_start
+        miles_driven = total_carbon_g * miles_per_kg_of_co2 /1000
+        total_ml = float(user_df["water_ml"].sum())
+        avg_ml_per_day = total_ml / days_since_start
+        total_water_bottles = total_ml / 500
+        total_kwh = float(user_df["kwh"].sum())
+        avg_kwh = total_kwh / days_since_start
+        return {
+               "message":    "JSON data appended to CSV file successfully.",
+               "file":       path,
+               "request_id": user_id,
+               "user_data": (
+               f"Welcome to AI Impact Tracker! | "
+               f"Total tokens: {total_tokens} | "
+               f"Daily avg tokens: {avg_tokens_per_day:.0f} | "
+               f"Total Carbon Emission: {total_carbon_g:.2f} g CO2 | "
+               f"Daily avg carbon: {avg_carbon_per_day:.2f} g CO2 | "
+               f"Total Miles Driven: {miles_driven:.2f} miles  | "
+               f"Total Water Consumed: {total_ml:.2f} mL | "
+               f"Daily avg water:  {avg_ml_per_day:.2f} mL | "
+               f"Total Water Bottles: {total_water_bottles:.2f} | "
+               f"Total Energy: {total_kwh:.2f} kWh | "
+               f"Daily avg energy: {avg_kwh:.2f} kWh"
+        ),
+    }
+
 @api.get("/plot-data2/")
 async def get_plot_data(file_name: str = "impacts.csv"):
     path = os.path.join("output_data", os.path.basename(file_name))
