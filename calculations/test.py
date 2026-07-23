@@ -20,15 +20,15 @@ BETA       = -1.12e-2
 GAMMA      = 4.05e-5
 BATCH_SIZE = 64
 #https://docs.google.com/spreadsheets/d/1XkPTkrGxpwWpIVIxpVvgRJuInSZsqbndTQbFGcHhdd0/edit?gid=803926269#gid=803926269
-GPT_P_ACTIVE_B = 300 #for gpt-5.5 #97
-GPT_P_TOTAL_B  = 900 #for gpt-5.5 #45
+#GPT_P_ACTIVE_B = 300 #for gpt-5.5 #97
+#GPT_P_TOTAL_B  = 900 #for gpt-5.5 #45
 P_ACTIVE_Bs = {"GPT": 300, "google_overview": 100, "google_ai_mode":240}
 P_TOTAL_Bs = {"GPT": 900, "google_overview":300, "google_ai_mode":900}
 Q_BITS     = 16
 M_GPU_GB   = 80
 GPU_INSTALLED = 8
 #https://artificialanalysis.ai/leaderboards/providers
-GPT_TOKENS_PER_SECOND = 65 # for gpt-5.5 (high)
+#GPT_TOKENS_PER_SECOND = 65 # for gpt-5.5 (high)
 TOKENS_PER_SECONDs = {"GPT": 65, "google_overview": 272,"google_ai_mode":159}
 miles_per_kg_of_co2 = 3.79
 
@@ -44,7 +44,7 @@ carbon_intensity = pd.read_csv(carbon_intensity_path)
 #https://www.epa.gov/system/files/documents/2025-06/summary_tables_rev2.xlsx
 usa_grid_path = os.path.join(BASE_DIR, "input_data", "usa_energy_grid_mix.csv")
 usa_energy_grid_mix = pd.read_csv(usa_grid_path)
-#https://ember-energy.org/data/yearly-electricity-data/
+#https://ember-energy.org/data/yearly-electricity-data/ , https://ourworldindata.org/electricity-mix
 global_grid_path = os.path.join(BASE_DIR, "input_data", "clean_energy_grid_international.csv")
 international_energy_grid_mix = pd.read_csv(global_grid_path)
 #https://apps.rec-cer.gc.ca/ftrppndc/dflt.aspx?GoCTemplateCulture=en-CA
@@ -140,6 +140,7 @@ Microsoft_WUEs_onsite = {
 }
 #https://arxiv.org/pdf/2508.15734
 Google_WUE_onsite = 1.15
+
 #Constant calculations
 #total energy consumed by a single GPU over a request period (Wh)
 def _compute_gpu_count(p_total_b: float, q_bits: int, m_gpu_gb: float) -> int:
@@ -157,10 +158,10 @@ GPU_COUNTs = {"GPT": _compute_gpu_count(P_TOTAL_Bs['GPT'], Q_BITS, M_GPU_GB),
 PER_TOKEN_COEFFs = {"GPT": _compute_per_token_coeff(ALPHA, BETA, GAMMA, BATCH_SIZE, P_ACTIVE_Bs['GPT']),
 	"google_overview": _compute_per_token_coeff(ALPHA, BETA, GAMMA, BATCH_SIZE, P_ACTIVE_Bs['google_overview']),
 	"google_ai_mode": _compute_per_token_coeff(ALPHA, BETA, GAMMA, BATCH_SIZE, P_ACTIVE_Bs['google_ai_mode'])}
-GPU_COUNT       = _compute_gpu_count(GPT_P_TOTAL_B, Q_BITS, M_GPU_GB)
-PER_TOKEN_COEFF = _compute_per_token_coeff(ALPHA, BETA, GAMMA, BATCH_SIZE, GPT_P_ACTIVE_B)
 
+#parses location string (sent from the extension) into a dictionary
 def parse_location_string(location: str) -> dict:
+	#location: "Country, State/Province, Watershed ID"
 	# Split by comma and strip whitespace
 	parts = [p.strip() for p in location.split(',')]
 	# Map parts to keys based on their position
@@ -170,6 +171,8 @@ def parse_location_string(location: str) -> dict:
 		"watershed_id": parts[2] if len(parts) > 2 else None
 	}
 
+#compute the WUE_offsite value based on the location following methods from Li et al. (2025). “Making AI Less ’Thirsty’”. 
+	#In: Communications of the ACM 68.7. pp. 54–61. URL: https://doi.org/10.1145/3724499.
 def compute_WUE_offsite(energy: int, energy_grid_mix: pd, country: str) -> float:
 	#calculating numerator of wue_off
 	numerator = 0
@@ -196,9 +199,9 @@ def compute_WUE_offsite(energy: int, energy_grid_mix: pd, country: str) -> float
 			water_intensity = ewif[(ewif['PowerType'] == fuel_type_percent) & (ewif['Key'] == 'Average')]['WaterConsumption_L_per_kWh'].iloc[0] #should we use average or high/low?
 			numerator += (energy_grid_mix[fuel_type_percent].iloc[0] * energy * water_intensity)
 	WUE_off = numerator / energy
-	print("WUE_off = " + str(WUE_off))
 	return WUE_off
 
+#retrieve WUE_onsite values depending on location and model type from imported datasets
 def get_WUE_onsite(location, model:str) -> float:
 	if model == "GPT":
 		if countries_by_region[countries_by_region['Country'] == location["country"]]['Region'].values[0] == "Americas":
@@ -212,6 +215,7 @@ def get_WUE_onsite(location, model:str) -> float:
 	else:
 		return Google_WUE_onsite
 
+#retrieve PUE value based on the location and model type from imported datasets
 def get_PUE(location_string:str , model:str) -> float:
 	location = parse_location_string(location_string)
 	if model == "GPT":
@@ -232,24 +236,12 @@ def get_PUE(location_string:str , model:str) -> float:
 			return Google_PUEs[Google_PUEs["Country"] == location["country"]]["PUE"].values[0]
 		return Google_PUEs[Google_PUEs["Country"] == "Global"]["PUE"].values[0]
 
-#calculate gallons consumed for given kwh in the given location
+#calculate gallons consumed for given kwh in the given location (for the given model type)
 def kwh_to_ml(kwh: float, location_string: str, model: str) ->float:
 	location = parse_location_string(location_string)
 	#find PUE and WUE_onsite for given location
 	PUE = get_PUE(location_string, model)
 	WUE_on = get_WUE_onsite(location, model)
-#	if countries_by_region.loc[countries_by_region['Country'] == location["country"], 'Region'].iloc[0] == "Americas":
-#		PUE = Microsoft_PUEs["Americas"]
-#		WUE_on = Microsoft_WUEs_onsite["Americas"]
-#	elif countries_by_region[countries_by_region['Country'] == location["country"]]['Region'].values[0] == "Asia-Pacific":
-#		PUE = Microsoft_PUEs["Asia_Pacific"]
-#		WUE_on = Microsoft_WUEs_onsite["Asia_Pacific"]
-#	elif countries_by_region[countries_by_region['Country'] == location["country"]]['Region'].values[0] == "EMEA":
-#		PUE = Microsoft_PUEs["Europe_Middle_East_and_Africa"]
-#		WUE_on = Microsoft_WUEs_onsite["Europe_Middle_East_and_Africa"]
-#	else:
-#		PUE = Microsoft_PUEs["Global"]
-#		WUE_on = Microsoft_WUEs_onsite["Global"]
 	#Find the electricity grid makeup
 	if location["country"] == "United States":
 		state_abbr = us_state_to_abbrev[location["state"]]
@@ -270,7 +262,7 @@ def kwh_to_ml(kwh: float, location_string: str, model: str) ->float:
 	return total_ml_consumed
 
 def calculate_AWI(string_id:str, water_l: float, location:str):
-    #calculates Adjusted Water Impact using (Wu et al. 2025) methods
+    #calculates Adjusted Water Impact using (Wu et al. 2025) methods (only in the US and Canada)
     #input: Aqueduct watershed string id, water consumed L, location string
     #returns awi_dict (containing keys: short awi, long awi 10, long awi 1, location string)
     awi_dict = {}
@@ -325,7 +317,7 @@ def get_AWI(emissions):
     string_ids = {} #watershed string id: full location string
     awis = {} #watershed string id: dict (short awi, long awi 10, long awi 1, ['full location'])
     pfaf_water = {} #watershed string id: water L
-    for index,row in location_based_emissions.iterrows(): #only calculating for US
+    for index,row in location_based_emissions.iterrows(): #only calculating for US and Canada
         if "United States" not in row["location"] and "Canada" not in row["location"]:
             continue
         location_dict = parse_location_string(row["location"])
@@ -351,6 +343,7 @@ def get_AWI(emissions):
         awis[stringid] = calculate_AWI(stringid, pfaf_water[stringid], string_ids[stringid])
     return awis
 
+#add AWI values to the output csv (awi_values.csv)
 def awis_to_csv(awis_dict:dict, filename:str):
     print("awis_to_csv called")
     # filter out any None values
@@ -377,7 +370,6 @@ def awis_to_csv(awis_dict:dict, filename:str):
     # save to csv
     df.to_csv(f"{filename}.csv", index=False, mode='w')
 
-#COUNTRY_FEM, STATE_FEM = _load_fem_tables()
 
 def parse_location(location: str) -> tuple:
     parts = [p.strip() for p in location.split(",")] if location else []
@@ -417,22 +409,9 @@ def get_fem(location: str) -> float:
 
         return fem
 
-#def get_PUE(location: str) -> float:
-#        location = parse_location_string(location)
-        #find PUE for given location
-#        if countries_by_region.loc[countries_by_region['Country'] == location["country"], 'Region'].iloc[0] == "Americas":
-#                PUE = Microsoft_PUEs["Americas"]
-#        elif countries_by_region[countries_by_region['Country'] == location["country"]]['Region'].values[0] == "Asia-Pacific":
-#                PUE = Microsoft_PUEs["Asia_Pacific"]
-#        elif countries_by_region[countries_by_region['Country'] == location["country"]]['Region'].values[0] == "EMEA":
-#                PUE = Microsoft_PUEs["Europe_Middle_East_and_Africa"]
-#        else:
-#                PUE = Microsoft_PUEs["Global"]
-#        return PUE
-
 #returns the energy consumed by server without the GPUs (Wh)
-def _compute_e_server_gpu(latency):
-        kws = latency * 1.2 * (GPU_COUNT / GPU_INSTALLED) * (1 / BATCH_SIZE)
+def _compute_e_server_gpu(latency,model:str):
+        kws = latency * 1.2 * (GPU_COUNTs[model] / GPU_INSTALLED) * (1 / BATCH_SIZE)
         return kws * 1000/ 3600
 
 #returns the latency (s) (the time it takes the model to respond to an inference)
@@ -442,9 +421,9 @@ def _compute_latency(tokens_out: int, model:str):
 
 def calculate_kwh(tokens_out: int, PUE: float, model: str) -> float:
 	latency = _compute_latency(tokens_out, model)
-	e_server_gpu = _compute_e_server_gpu(latency)
+	e_server_gpu = _compute_e_server_gpu(latency, model)
 	e_gpu     = tokens_out * PER_TOKEN_COEFFs[model]
-	e_server  = e_server_gpu + GPU_COUNT * e_gpu
+	e_server  = e_server_gpu + GPU_COUNTs[model] * e_gpu
 	e_request = e_server   * PUE
 	return e_request / 1000
 
@@ -452,9 +431,10 @@ def calculate_carbon(e_request: float, fem_gco2_per_kwh: float) -> float:
 	co2_g   = (e_request  * fem_gco2_per_kwh)
 	return co2_g
 
-
+#impacts.csv column names
 FIELDNAMES = ["user_id", "tokens", "location", "date", "fem_gco2_per_kwh", "carbon_g", "kwh", "water_ml", "country", "state", "watershed", "state_code", "model"]
 
+#fill in empty carbon cells in impacts.csv
 def backfill_carbon(path: str, model:str) -> None:
         df = pd.read_csv(path)
         if "kwh" not in df.columns:
@@ -474,6 +454,7 @@ def backfill_carbon(path: str, model:str) -> None:
                 df.loc[needs_calc, "carbon_g"] = df.loc[needs_calc].apply(lambda r: calculate_carbon(float(r["kwh"]), float(r["fem_gco2_per_kwh"])),axis=1,)
         df[FIELDNAMES].to_csv(path, index=False)
 
+#fill in empty water cells in impacts.csv
 def backfill_water(path: str, model: str) -> None:
         df = pd.read_csv(path)
         if "kwh" not in df.columns:
@@ -488,6 +469,7 @@ def backfill_water(path: str, model: str) -> None:
                 df.loc[needs_calc, "water_ml"] = df.loc[needs_calc].apply(lambda r: kwh_to_ml(float(r["kwh"]), str(r["location"]), model),axis=1,)
         df[FIELDNAMES].to_csv(path, index=False)
 
+#fill in empty location (country, state, watershed, state code) cells in impacts.csv
 def backfill_locations(path:str) -> None:
 	df = pd.read_csv(path)
 	for col in ['country', 'state', 'watershed', 'state_code']:
@@ -505,6 +487,16 @@ def backfill_locations(path:str) -> None:
         	)
 	df[FIELDNAMES].to_csv(path, index=False)
 
+#fill in empty model cells in impacts.csv
+def backfill_model(path:str, model:str) -> None:
+        df = pd.read_csv(path)
+        if 'model' not in df.columns:
+                df['model'] = None
+        needs_calc = df["model"].isna() | (df["model"].astype(str).str.strip() == "")
+        if needs_calc.any():
+                df.loc[needs_calc, 'model'] = model
+        df[FIELDNAMES].to_csv(path, index=False)
+
 API_KEY = "44cf2d37-1e0d-4847-b6e9-81bb877bc2d1" #"dev_key_change_me"
 
 api.add_middleware(
@@ -515,7 +507,7 @@ api.add_middleware(
     allow_headers=["*"],
 )
 
-
+#objects sent from chrome extension
 class EmissionEvent(BaseModel):
     tokens: int
     location: str
@@ -590,6 +582,7 @@ async def read_csv(file_name: str):
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="File not found.")
 
+#recieve scraped image parameters from the extension, reload user interface/window
 @api.post("/write-csv-img/")
 async def write_csv_img(req: ImgCSVRequest, x_api_key: str = Header(default="")):
     if x_api_key != API_KEY:
@@ -598,7 +591,7 @@ async def write_csv_img(req: ImgCSVRequest, x_api_key: str = Header(default=""))
     os.makedirs("output_data", exist_ok=True)
     path = os.path.join("output_data", os.path.basename(req.file_name))
     with open(path, "a", newline="") as f:
-        #add in calculations for images
+        #todo: add in calculations for images
 
         df = pd.read_csv(path)
 
@@ -640,7 +633,8 @@ async def write_csv_img(req: ImgCSVRequest, x_api_key: str = Header(default=""))
                ),
         }
 
-
+#receive scraped ChatGPT (tokens, location, user-id) data from the chrome extension; perform energy, water, carbon calculations;
+	# add new data/row to impacts.csv; send updated environmental footprint data back to user
 @api.post("/write-csv2/")
 async def write_csv(req: CSVRequest, x_api_key: str = Header(default="")):
     print(f"Received key: '{x_api_key}'")
@@ -654,6 +648,7 @@ async def write_csv(req: CSVRequest, x_api_key: str = Header(default="")):
         backfill_carbon(path, 'GPT')
         backfill_water(path, 'GPT')
         backfill_locations(path)
+        backfill_model(path, 'GPT')
 
     with open(path, "a", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
@@ -726,6 +721,9 @@ async def write_csv(req: CSVRequest, x_api_key: str = Header(default="")):
                f"Daily avg energy: {avg_kwh:.2f} kWh"
         ),
     }
+
+#receive scraped Google AI Overview and AI Mode (tokens, location, model type, user-id) data from the chrome extension; perform 
+	#energy, carbon, water calculations; add new data/row to impactst.csv; send updated environmental footprint data back to user
 @api.post("/write-csv-google/")
 async def write_csv_google(req: CSVGoogleRequest, x_api_key: str = Header(default="")):
     print(f"Received key: '{x_api_key}'")
@@ -827,6 +825,7 @@ async def get_plot_data(file_name: str = "impacts.csv"):
 def get_data():
     return emission
 
+#calculate and then save AWI values
 @api.get("/calculate-awi2/{file_name}")
 async def calculate_and_save_awi(file_name: str):
     try:
@@ -874,16 +873,7 @@ async def calculate_and_save_awi(file_name: str):
             }
         )
 
-@api.get("/debug-paths")
-async def debug_paths():
-    return {
-        "cwd": os.getcwd(),
-        "file_location": os.path.abspath(__file__),
-        "BASE_DIR": BASE_DIR,
-        "data_dir_exists": os.path.exists(BASE_DIR),
-        "data_dir_contents": os.listdir(BASE_DIR) if os.path.exists(BASE_DIR) else "DIRECTORY NOT FOUND"
-    }
-
+#reload extension data - user opens popup window of extension which calls a reload of the data to make sure there window is up to date
 @api.post("/reload-extension-data/")
 async def read_csv(req: ReadRequest, x_api_key: str = Header(default="")):
     print(f"Received key: '{x_api_key}'")
@@ -950,4 +940,4 @@ async def read_csv(req: ReadRequest, x_api_key: str = Header(default="")):
         ),
     }
 
-api.mount("/static-data2", StaticFiles(directory=os.path.join(BASE_DIR, "data")), name="static-data2")
+api.mount("/static-data2", StaticFiles(directory=os.path.join(BASE_DIR, "output_data")), name="static-data2")
